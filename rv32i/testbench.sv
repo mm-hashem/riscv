@@ -12,13 +12,11 @@ module testbench
 
     initial begin: init
         clk_i <= 0;
-
         rst_i <= 1;
         pc_init_i <= 32'sh0;
         repeat (3) @(posedge clk_i);
         rst_i <= 0;
-        pc_init_i <= 32'sh1000;
-        repeat (10) @(posedge clk_i);
+        wait(testbench.rv32i_inst.instr[6:0] == OP_I_ECALL);
         $stop;
     end: init
     

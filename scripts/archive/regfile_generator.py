@@ -4,8 +4,7 @@ regfile = {
     7: "00000000"
 }
 
-with open("qc/regfile.mem", "w") as file:
-    file.write("// Value - Register\n")
+with open("qs/regfile.mem", "w") as file:
     for x in range (32):
         if x in regfile:
             file.write(regfile[x] + " // " + f"x{x}" + "\n")

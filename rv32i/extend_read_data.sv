@@ -1,4 +1,4 @@
-module read_data_extender
+module extend_read_data
     import definitions_pkg::*;
 (
     input  word_st       read_data_i,
@@ -10,11 +10,11 @@ module read_data_extender
         unique case (funct3_i)
             3'b000 : read_data_sized_o = read_data_i[ 7:0];
             3'b001 : read_data_sized_o = read_data_i[15:0];
+            3'b010 : read_data_sized_o = read_data_i;
             3'b100 : read_data_sized_o = { {24{1'b0}}, read_data_i[ 7:0]};
             3'b101 : read_data_sized_o = { {16{1'b0}}, read_data_i[15:0]};
-            3'b010 : read_data_sized_o = read_data_i;
             default: read_data_sized_o = 32'bx;
-        endcase        
+        endcase
     end
 
 endmodule
