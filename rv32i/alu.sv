@@ -17,7 +17,7 @@ module alu
             ALU_XOR : alu_result_o = src_a_i ^   src_b_i;
             ALU_SLL : alu_result_o = src_a_i <<  unsigned'(src_b_i[4:0]);
             ALU_SRL : alu_result_o = src_a_i >>  unsigned'(src_b_i[4:0]);
-            ALU_SRL : alu_result_o = src_a_i >>> unsigned'(src_b_i[4:0]);
+            ALU_SRA : alu_result_o = src_a_i >>> unsigned'(src_b_i[4:0]);
             ALU_SLTU: alu_result_o = unsigned'(src_a_i) < unsigned'(src_b_i);
             default : alu_result_o = 32'sh0;
         endcase
