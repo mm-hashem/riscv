@@ -1,29 +1,38 @@
+# 64 - C - Zba
 # Toolchains
-AS = riscv32-unknown-elf-as
-LD = riscv32-unknown-elf-ld
-OBJCOPY = riscv32-unknown-elf-objcopy
+CC = riscv64-unknown-elf-gcc
+AS = riscv64-unknown-elf-as
+LD = riscv64-unknown-elf-ld
+OBJCOPY = riscv64-unknown-elf-objcopy
 
 # Flags
-ASFLAGS = -march=rv32i -mabi=ilp32 -mlittle-endian
-LDFLAGS = -m elf32lriscv -b elf32-littleriscv -nostdlib
+CCFLAGS = -march=rv64i_zba -mabi=lp64 -mlittle-endian -S #-fverbose-asm
+ASFLAGS = -march=rv64i_zba -mabi=lp64 -mlittle-endian
+LDFLAGS = -m elf64lriscv -b elf64-littleriscv -nostdlib
+OBJCOPYFLAGS = -O verilog # --verilog-data-width=4
 
 # Directories
-SRC_DIR = scripts
-MEM_DIR = qs
+SRC_DIR = sw
+MEM_DIR = hdl/qs_run
 
 # Files
-SOURCES = $(SRC_DIR)/cordic.s
-OBJECTS = $(SOURCES:.s=.o)
-LINKER = $(SRC_DIR)/linker.ld
-ELF = $(SOURCES:.s=.elf) # OR OBJECTS?
+SOURCES = $(SRC_DIR)/test.c
+ASMFILES = $(SOURCES:.c=.s)
+OBJECTS = $(ASMFILES:.s=.o)
+ELF = $(OBJECTS:.o=.elf)
+LINKER = $(SRC_DIR)/linker_64.ld
 MEMORIES = $(MEM_DIR)/text.mem $(MEM_DIR)/data.mem
 
 .PHONY: all clean
 
 all: $(MEMORIES)
 
+# Compile: .c -> .s
+$(ASMFILES): $(SOURCES)
+	$(CC) $(CCFLAGS) $< -o $@
+
 # Assemble: .s -> .o, one to one
-%.o: %.s
+$(OBJECTS): $(ASMFILES)
 	$(AS) $(ASFLAGS) $< -o $@
 
 # Link: .o -> .elf, many to one
@@ -31,18 +40,11 @@ $(ELF): $(LINKER) $(OBJECTS)
 	$(LD) $(LDFLAGS) -T $(LINKER) $(OBJECTS) -o $@
 
 $(MEM_DIR)/text.mem: $(ELF)
-	$(OBJCOPY) -O verilog --only-section=.text $< $@
+	$(OBJCOPY) $(OBJCOPYFLAGS) --only-section=.text $< $@
 
 $(MEM_DIR)/data.mem: $(ELF)
-	$(OBJCOPY) -O verilog --only-section=.data $< $@
+	$(OBJCOPY) $(OBJCOPYFLAGS) --only-section=.data --gap-fill 0x00 --pad-to 0x00000800 $< $@
 
 clean:
 	
 #	rm -f $(OBJECTS) $(ELF) $(MEMORIES)
-
-###################################
-
-# riscv32-unknown-elf-as -march=rv32i -mabi=ilp32 -mlittle-endian cordic.s -o cordic.o
-# riscv32-unknown-elf-ld -m elf32lriscv -b elf32-littleriscv -nostdlib -T linker.ld cordic.o -o cordic.elf
-# riscv32-unknown-elf-objcopy -O verilog --only-section=.text prog.elf text.mem
-# riscv32-unknown-elf-objcopy -O verilog --only-section=.data prog.elf data.mem

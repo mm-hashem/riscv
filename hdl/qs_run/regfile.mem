@@ -1,0 +1,33 @@
+@00000
+00000000 // x0  zero  constant
+00000000 // x1  ra    return address
+000007F0 // x2  sp    stack  pointer
+00000000 // x3  gp    global pointer
+00000000 // x4  tp    thread pointer
+00000000 // x5  t0    temporary
+00000000 // x6  t1    temporary
+00000000 // x7  t2    temporary
+00000000 // x8  s0/fp saved/frame pointer
+00000000 // x9  s1    saved
+00000000 // x10 a0    function argument/return value
+00000000 // x11 a1    function argument/return value
+00000000 // x12 a2    function argument
+00000000 // x13 a3    function argument
+00000000 // x14 a4    function argument
+00000000 // x15 a5    function argument
+00000000 // x16 a6    function argument
+00000000 // x17 a7    function argument
+00000000 // x18 s2    saved
+00000000 // x19 s3    saved
+00000000 // x20 s4    saved
+00000000 // x21 s5    saved
+00000000 // x22 s6    saved
+00000000 // x23 s7    saved
+00000000 // x24 s8    saved
+00000000 // x25 s9    saved
+00000000 // x26 s10   saved
+00000000 // x27 s11   saved
+00000000 // x28 t3    temporary
+00000000 // x29 t4    temporary
+00000000 // x30 t5    temporary
+00000000 // x31 t6    temporary
