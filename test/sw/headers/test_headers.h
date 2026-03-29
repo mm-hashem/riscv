@@ -1,0 +1,33 @@
+#ifndef TEST_HEADERS_H
+#define TEST_HEADERS_H
+
+#if XLEN == 64
+    #define LD_INS ld
+    #define ST_INS sd
+    #define ALIGNB 3
+#else
+    #define LD_INS lw
+    #define ST_INS sw
+    #define ALIGNB 2
+#endif
+
+// Store ra and sp register in the .data section for riscv-tests
+#define STORE_RA_SP_DATA \
+    .data;               \
+    .align 4;            \
+    RSP: .word 0;        \
+    RRA: .word 0;        \
+    .previous;           \
+    la x31, RSP;         \
+    ST_INS sp, 0(x31);   \
+    la x31, RRA;         \
+    ST_INS ra, 0(x31);
+
+// Load ra and sp register from the .data section for riscv-tests
+#define LOAD_RA_SP_DATA \
+    la x31, RSP;        \
+    LD_INS sp, 0(x31);  \
+    la x31, RRA;        \
+    LD_INS ra, 0(x31);
+
+#endif // TEST_HEADERS_H

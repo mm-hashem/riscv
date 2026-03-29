@@ -1,0 +1,17 @@
+./rtl/common/control_path/alu_decoder.sv
+./rtl/common/control_path/controller.sv
+./rtl/common/control_path/main_decoder.sv
+./rtl/common/control_path/pc_control_unit.sv
+./rtl/common/control_path/branch_decoder.sv
+./rtl/common/control_path/memory_control_unit.sv
+./rtl/common/data_path/alu.sv
+./rtl/common/data_path/extend_imm.sv
+./rtl/common/data_path/load_unit.sv
+./rtl/common/data_path/store_unit.sv
+./rtl/common/data_path/program_counter.sv
+./rtl/common/data_path/register_file.sv
+./rtl/common/memory/data_ram.sv
+./rtl/common/memory/instruction_rom.sv
+./rtl/common/utils/mux2_xs.sv
+./rtl/common/utils/mux4_xs.sv
+./rtl/common/utils/mux4_ws.sv
