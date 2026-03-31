@@ -1,4 +1,4 @@
-package utils_pkg;
+package tb_utils_pkg;
     import types_pkg::*;
     import funct_pkg::*;
     import config_pkg::*;

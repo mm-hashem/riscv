@@ -4,8 +4,8 @@ module rv_core_abi_assert
 (
     input logic   clk_i, rst_i,
                   mem_write,
-    input xlen_st alu_result,
-    input word_st pc
+    input word_st pc,
+    input xlen_st alu_result
 );
 
     // Validating data memory addresses on write operations

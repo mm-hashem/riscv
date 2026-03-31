@@ -4,6 +4,24 @@ module binds
     input logic clk_i, rst_i
 );
 
+    /***** Memory Loader *****/
+
+    bind data_ram memory_loader #(
+        .MEM_TYPE("data"),
+        .ORG_ADDR(CFG_DATA_ORG),
+        .END_ADDR(CFG_DATA_END)
+    ) memory_loader_inst (
+        .memory(ram)
+    );
+
+    bind instruction_rom memory_loader #(
+        .MEM_TYPE("text"),
+        .ORG_ADDR(CFG_TEXT_ORG),
+        .END_ADDR(CFG_TEXT_END)
+    ) memory_loader_inst (
+        .memory(rom)
+    );
+
     /***** RTL Assertions *****/
 
     bind main_decoder main_decoder_assert main_decoder_assert_inst (
@@ -31,46 +49,38 @@ module binds
         .pc_init_i, .pc_next_i, .pc_o
     );
 
-    generate // TODO: Interface?
-        if (CFG_CORE == SINGLE) begin : RV_SINGLE_ASSERT
-            bind rv_single rv_core_assert rv_core_assert_inst (
-                .clk_i, .rst_i,
-                .branch, .jump,
-                .pc_src,
-                .pc,
-                .branch_target_addr,
-                .alu_result
-            );
-        end else if (CFG_CORE == STAGE3) begin : RV_STAGE3_ASSERT
-            bind rv_stage3 rv_core_assert rv_core_assert_inst (
-                .clk_i, .rst_i,
-                .branch(dc_s3_q.ctrl.branch), .jump(dc_s3_q.ctrl.jump),
-                .pc_src(pc_src_s3),
-                .pc(if_dc_d.pc),
-                .branch_target_addr(branch_target_addr_s3),
-                .alu_result(alu_result_s3)
-            );
-        end
-    endgenerate
+    bind RV_CORE.rv_core_inst rv_core_assert rv_core_assert_inst (
+        .clk_i, .rst_i,
+        .branch(dbg.branch), .jump(dbg.jump),
+        .pc_src(dbg.pc_src),
+        .pc(dbg.pc), .bta(dbg.bta),
+        .alu_result(dbg.alu_result)
+    ); // todo use rv_single/rv_stage3
 
     /***** ABI Assertions *****/
 
-    generate // TODO: Interface?
-        if (CFG_CORE == SINGLE) begin : RV_SINGLE_ABI_ASSERT
-             bind rv_single rv_core_abi_assert rv_core_abi_assert_inst (
-                .clk_i, .rst_i,
-                .mem_write,
-                .alu_result,
-                .pc
-            );
-        end else if (CFG_CORE == STAGE3) begin : RV_STAGE3_ABI_ASSERT
-            bind rv_stage3 rv_core_abi_assert rv_core_abi_assert_inst (
-                .clk_i, .rst_i,
-                .mem_write(dc_s3_q.ctrl.mem_write),
-                .alu_result(alu_result_s3),
-                .pc(if_dc_d.pc)
-            );
-        end
-    endgenerate
+    bind RV_CORE.rv_core_inst rv_core_abi_assert rv_core_abi_assert_inst (
+        .clk_i, .rst_i,
+        .mem_write (dbg.mem_write),
+        .pc        (dbg.pc),
+        .alu_result(dbg.alu_result)
+    ); // todo use rv_single/rv_stage3
+
+    /***** Monitor *****/
+
+`ifndef RGRS
+    bind RV_CORE.rv_core_inst monitor monitor_inst (
+        .clk_i, .rst_i,
+        .reg_write(dbg.reg_write),
+        .mem_write(dbg.mem_write),
+        .pc  (dbg.pc),     .instr(dbg.instr),
+        .rd_d(dbg.result), .a    (dbg.a),
+        .wd_i(dbg.wd)
+    );
+`endif
+
+    /***** TOHOST *****/
+
+    bind data_ram tohost tohost_inst ( .clk_i, .ram );
 
 endmodule : binds

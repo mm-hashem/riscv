@@ -127,15 +127,13 @@ module rv_core_assert
     input logic    clk_i, rst_i,
                    branch, jump,
     input pc_src_e pc_src,
-    input word_st  pc,
-    input xlen_st  branch_target_addr,
-                   alu_result
+    input word_st  pc, bta, alu_result
 );
 
     property branch_target_taken;
         @(posedge clk_i)
         disable iff (rst_i)
-        (branch && pc_src == PCSRC_BR) |=> (pc == $past(branch_target_addr));
+        (branch && pc_src == PCSRC_BR) |=> (pc == $past(bta));
     endproperty : branch_target_taken
 
     property jump_target_taken;

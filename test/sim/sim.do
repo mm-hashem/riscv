@@ -1,9 +1,9 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
-add wave -noupdate sim:/testbench/regfile_tb;
-add wave -noupdate sim:/testbench/opcode_str;
+add wave -noupdate sim:/rv_top/RV_CORE/rv_core_inst/register_file_inst/regfile;
+add wave -noupdate sim:/rv_top/RV_CORE/rv_core_inst/monitor_inst/instr_name;
 add wave -noupdate -r *;
-add wave -noupdate sim:/testbench/ram_tb;
+add wave -noupdate sim:/rv_top/RV_CORE/rv_core_inst/data_ram_inst/ram;
 TreeUpdate [SetDefaultTree]
 quietly wave cursor active 1
 configure wave -namecolwidth 397
