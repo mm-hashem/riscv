@@ -3,7 +3,7 @@ XLEN   ?=
 CORE   ?=
 EXT    ?=
 TEST   ?=
-TB     ?= testbench
+TOP    ?= rv_top
 CCDBG  ?=
 SIMGUI ?= 0
 RGRS   ?= 0
@@ -172,18 +172,19 @@ LOGS_DIR := $(BUILD_DIR)/logs
 RTL_DIR  := ./rtl
 
 # Files
+TOP_FILE     := $(TB_DIR)/rv_top.sv
 PKG_FILES    := -f $(SIM_DIR)/filelist_pkg.f
 COMMON_FILES := -f $(SIM_DIR)/filelist_common.f
 
 ifeq ($(CORE),SINGLE)
-    CORE_FILES += $(RTL_DIR)/rv_single.sv
+    CORE_FILES += $(RTL_DIR)/cores/rv_single.sv
 else ifeq ($(CORE),STAGE3)
-    CORE_FILES += $(RTL_DIR)/pipelined/stage3/hazard_unit.sv $(RTL_DIR)/rv_stage3.sv
+    CORE_FILES += $(RTL_DIR)/pipelined/stage3/hazard_unit.sv $(RTL_DIR)/cores/rv_stage3.sv
 endif
 
 RTL_FILES := $(PKG_FILES) $(COMMON_FILES) $(CORE_FILES)
 VRF_FILES := -f $(SIM_DIR)/filelist_vrf.f
-SV_FILES  := $(RTL_FILES) $(VRF_FILES)
+SV_FILES  := $(RTL_FILES) $(VRF_FILES) $(TOP_FILE)
 DOFILE    := $(SIM_DIR)/sim.do
 
 DOCMD := $(if $(filter $(SIMGUI),1),do $(DOFILE);,$(if $(filter $(RGRS),1),quietly vsim;,)) run -all; $(if $(filter $(SIMGUI),1),,quit -f;)
@@ -202,7 +203,7 @@ simcompile: simmap | $(LOGS_DIR)
 	vlog $(VLOGFLAGS) $(VLOGDEFS) $(SV_FILES)
 
 simopt: simcompile
-	vopt $(VOPTFLAGS) $(TB) -o design_opt
+	vopt $(VOPTFLAGS) $(TOP) -o design_opt
 
 sim:
 	vsim $(VSIMFLAGS) -do "$(DOCMD)" design_opt +TESTNAME="$(TEST_SLUG)"
