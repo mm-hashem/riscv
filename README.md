@@ -24,30 +24,40 @@ A synthesizable RISC-V processor implementation in SystemVerilog supporting both
 
 ```
 riscv/
-├── build/                  # Build artifacts and logs
-│   ├── logs/               # Compilation and simulation logs
-│   ├── memory/             # Generated memory hex files
-│   ├── sw/                 # Compiled software binaries
-│   └── work/               # QuestaSim work directory
-├── docs/                   # Documentation
-│   └── diagrams/           # draw.io diagrams
-├── rtl/                    # Hardware design files
-│   ├── common/             # Shared RTL components
-│   │   ├── control_path/   # Control logic modules
-│   │   ├── data_path/      # Datapath modules
-│   │   ├── memory/         # Data and instruction memories
-│   │   └── utils/          # Generic primitives
-│   ├── pipelined/          # Pipeline-specific components
-│   │   └── stage3/         # 3-stage pipeline-specific components
-│   └── pkg                 # SystemVerilog packages
-└── test/                   # Test infrastructure
-    ├── sim/                # Simulation-specific files
-    ├── sw/                 # Test programs and runtime
-    │   ├── crt/            # C runtime (startup/exit)
-    │   ├── headers/        # Test macros and utilities
-    │   ├── linker/         # Custom linker script
-    │   └── riscv_tests/    # RISC-V tests (modified)
-    └── tb/                 # Verification modules
+├── build/                             # Build artifacts and logs
+│   ├── logs/                          # Compilation and simulation logs
+│   ├── memory/                        # Generated memory hex files
+│   ├── sw/                            # Compiled software binaries
+│   └── work/                          # QuestaSim work directory
+├── docs/                              # Documentation
+│   └── diagrams/                      # draw.io diagrams
+├── rtl/                               # Hardware design files
+│   ├── common/                        # Shared RTL components
+│   │   ├── control_path/              # Control logic modules
+│   │   ├── data_path/                 # Datapath modules
+│   │   ├── memory/                    # Data and instruction memories
+│   │   └── utils/                     # Generic primitives
+│   ├── cores/                         # Core top-level modules
+│   ├── pipelined/                     # Pipeline-specific components
+│   │   └── stage3/                    # 3-stage pipeline-specific components
+│   └── pkg                            # SystemVerilog packages
+└── test/                              # Test infrastructure
+    ├── sim/                           # Simulation-specific files
+    ├── sw/                            # Test programs and runtime
+    │   ├── crt/                       # C runtime (startup/exit)
+    │   ├── custom/                    # Custom test programs
+    │   ├── headers/                   # Test macros and utilities
+    │   ├── linker/                    # Custom linker script
+    │   ├── riscv_tests/               # Adapted riscv-tests
+    │   │   ├── headers/               # riscv-tests macros and utilities
+    │   │   ├── rv32i/                 # 32-bit base integer tests
+    │   │   ├── rv32zba/               # 32-bit Zba extension tests
+    │   │   ├── rv64i/                 # 64-bit base integer tests
+    │   │   └── rv64zba/               # 64-bit Zba extension tests
+    │   └── scripts/                   # Build and simulation helper scripts
+    └── tb/                            # Verification modules
+        ├── assertions/                # Formal assertion modules
+        └── pkg/                       # Testbench packages
 ```
 
 ## Architecture
@@ -195,7 +205,10 @@ make build_sv XLEN=[32|64] CORE=[SINGLE|STAGE3] [EXT=ZBA]
 ```
 
 ### **`riscv-tests`**
-- Regression testing for `riscv-tests` is handled via dedicated targets that iterate over test files, while standard build/sim targets operate on a single test.
+
+**Important:** This project uses a subset of `riscv-tests` adapted for this project. See [Test Programs](#test-programs) and [test/sw/riscv_tests/README.md](test/sw/riscv_tests/README.md) for details on the modifications and license.
+
+Regression testing for `riscv-tests` is handled via dedicated targets that iterate over test files, while standard build/sim targets operate on a single test.
 
 1. Compile and link the test program, RTL, and verification files, and generate the hex memory files:
 
@@ -278,18 +291,32 @@ Assertion modules cleanly bind to RTL using SystemVerilog `bind` statements.
 
 ### Testbench
 
+- **Top Module:** Structured top module that instantiates the core and binds verification modules
 - **Instruction Monitor:** Monitor the PC, instruction, register, and data writes
 - **Self-Terminating:** Stops simulation via TOHOST memory location
 - **Result Logging:** Captures regression test outcomes to file
+- **Memory Loader:** Loads program and data memory from hex files generated by the build system
 
 ### Test Programs
 
 The `main` function and the `.text.main` memory segment serve as the primary entry points for any program executed on this processor. These can be defined using either a section directive or GCC attributes.
 
-I utilized RISC-V International's `riscv-tests`, making minor modifications to integrate it into my automated workflow:
+#### **riscv-tests**
 
-- [riscv-tests repository](https://github.com/riscv-software-src/riscv-tests)
+I adapted RISC-V International's `riscv-tests`, making minor modifications to integrate it into my automated workflow:
+
+- **Source:** [riscv-tests repository](https://github.com/riscv-software-src/riscv-tests)
 - **License:** See [test/sw/riscv_tests/LICENSE.txt](test/sw/riscv_tests/LICENSE.txt)
+
+Modifications:
+- Added assembly directives and adjusted memory sections to match my custom linker script
+- Modified test macros to align with core behavior
+- Added code for register saving/resting
+- Removed unused macros and code for simplicity
+
+Source files are stored in `test/sw/riscv_tests/`.
+
+Original license and headers are preserved.
 
 Additionally, I tested the processor using a custom C and assembly-based CORDIC algorithm for sine and cosine calculations:
 
