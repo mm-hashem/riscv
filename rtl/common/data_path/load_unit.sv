@@ -1,9 +1,9 @@
 module load_unit
     import types_pkg::*;
 (
-    input  xlen_st         read_data_i,
+    input      xlen_st     read_data_i,
     input  var data_ctrl_t data_ctrl_i,
-    output xlen_st         read_data_sized_o
+    output     xlen_st     read_data_sized_o
 );
     
     always_comb begin

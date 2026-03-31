@@ -1,9 +1,12 @@
-module mux2_xs // xlen_st
+module mux2
     import types_pkg::*;
+#(
+    parameter type type_t = xlen_st
+)
 (
-    input  xlen_st i0, i1,
+    input  type_t i0, i1,
     input  logic   sel,
-    output xlen_st y
+    output type_t y
 );
 
     always_comb begin

@@ -1,9 +1,12 @@
-module mux4_ws // word_st
+module mux4
     import types_pkg::*;
+#(
+    parameter type type_t = xlen_st
+)
 (
-    input  word_st     i0, i1, i2, i3,
+    input  type_t      i0, i1, i2, i3,
     input  logic [1:0] sel,
-    output word_st     y
+    output type_t      y
 );
 
     always_comb begin

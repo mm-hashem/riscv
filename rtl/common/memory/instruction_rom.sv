@@ -2,7 +2,7 @@ module instruction_rom
     import config_pkg::*;
     import types_pkg::*;
 (
-    input  xlen_ut   instr_a_i,
+    input  word_ut instr_a_i,
     output word_ut instr_o
 );
 
