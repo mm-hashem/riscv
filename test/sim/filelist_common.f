@@ -12,6 +12,5 @@
 ./rtl/common/data_path/register_file.sv
 ./rtl/common/memory/data_ram.sv
 ./rtl/common/memory/instruction_rom.sv
-./rtl/common/utils/mux2_xs.sv
-./rtl/common/utils/mux4_xs.sv
-./rtl/common/utils/mux4_ws.sv
+./rtl/common/utils/mux2.sv
+./rtl/common/utils/mux4.sv
