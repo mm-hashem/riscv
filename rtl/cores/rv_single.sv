@@ -1,16 +1,10 @@
 module rv_single
     import config_pkg::*;
     import types_pkg::*;
+    import dbg_pkg::*;
 (
-    input  logic       clk_i, rst_i,
-    input  word_st     pc_init_i,
-    output word_st     pc_tb, 
-    output word_ut     instr_tb,
-    output xlen_ut     a_tb,
-    output xlen_st     rd_d_tb, regfile_tb [0:31], wd_tb,
-    output logic [7:0] ram_tb[CFG_DATA_ORG:CFG_DATA_END-1],
-    output logic       mem_write_tb, reg_write_tb,
-    output reg_e       rd_a_tb
+    input  logic      clk_i, rst_i,
+    input  word_st    pc_init_i
 );
 
     // Data Signals
@@ -18,7 +12,7 @@ module rv_single
             src_a,   src_b,     alu_result,
             rs1_d,   rs2_d,     imm_ext,
             write_data_sized, read_data_sized;
-    word_st pc, pc_next, pc_plus_4, branch_target_addr; 
+    word_st pc, pc_next, pc_plus_4, bta; 
     word_ut instr;
 
     // Control signals
@@ -34,28 +28,32 @@ module rv_single
     alu_e        alu_ctrl;
     data_ctrl_t  data_ctrl;
 
-    /********************************
-     ***** Output/Debug Signals *****
-     ********************************/
+    /*************************
+     ***** Debug Signals *****
+     *************************/
 
-    assign pc_tb        = pc;
-    assign instr_tb     = instr;
-    assign regfile_tb   = rv_single.register_file_inst.regfile;
-    assign a_tb         = rv_single.data_ram_inst.a_i;
-    assign wd_tb        = rv_single.data_ram_inst.wd_i;
-    assign ram_tb       = rv_single.data_ram_inst.ram;
-    assign mem_write_tb = mem_write;
-    assign reg_write_tb = reg_write;
-    assign rd_a_tb      = reg_e'(instr[11:7]);
-    assign rd_d_tb      = result;
+     core_dbg_t dbg;
+
+    assign dbg.pc         = pc;
+    assign dbg.instr      = instr;
+    assign dbg.a          = rv_single.data_ram_inst.a_i;
+    assign dbg.result     = result;
+    assign dbg.wd         = rv_single.data_ram_inst.wd_i;
+    assign dbg.mem_write  = mem_write;
+    assign dbg.reg_write  = reg_write;
+    assign dbg.branch     = branch;
+    assign dbg.jump       = jump;
+    assign dbg.pc_src     = pc_src;
+    assign dbg.bta        = bta;
+    assign dbg.alu_result = alu_result;
 
     /************************************************/
 
-    mux4_ws mux4_ws_pc_next (
+    mux4 #(.type_t (word_st)) mux4_pc_next (
         .sel(pc_src),
         .i0 (pc_plus_4),
         .i1 (alu_result),         // jalr, JTA = rs1 + imm
-        .i2 (branch_target_addr), // B,    BTA = pc  + imm
+        .i2 (bta), // B,    BTA = pc  + imm
         .i3 ('x),                 // Unreachable
         .y  (pc_next)
     );
@@ -69,7 +67,7 @@ module rv_single
 
     assign pc_plus_4 = pc + CFG_XLEN'(4);
 
-    instruction_rom instr_rom_inst (
+    instruction_rom instruction_rom_inst (
         .instr_a_i(pc), .instr_o(instr)
     );
 
@@ -107,12 +105,12 @@ module rv_single
     );
 
     // Branch target address calculation
-    assign branch_target_addr = pc + imm_ext;
+    assign bta = pc + imm_ext;
 
     /***** ALU and Source Muxes *****/
 
     // ALU Src A Mux
-    mux4_xs mux4_xs_alu_a_src (
+    mux4 mux4_alu_a_src (
         .sel(alu_a_src),
         .i0 (rs1_d), // Register/Immediate instructions
         .i1 ('0),    // U: lui
@@ -122,7 +120,7 @@ module rv_single
     );
 
     // ALU Src B Mux
-    mux2_xs mux2_xs_alu_b_src (
+    mux2 mux2_alu_b_src (
         .sel(alu_b_src),
         .i0 (rs2_d),
         .i1 (imm_ext),
@@ -160,7 +158,7 @@ module rv_single
 
     /***** Writeback/ResultSrc Mux *****/
 
-    mux4_xs mux4_xs_result_src (
+    mux4 mux4_result_src (
         .sel(result_src),
         .i0 (alu_result),
         .i1 (read_data_sized),

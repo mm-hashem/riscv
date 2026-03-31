@@ -2,16 +2,10 @@ module rv_stage3
     import config_pkg::*;
     import types_pkg::*;
     import pipeline_pkg::*;
+    import dbg_pkg::*;
 (
-    input  logic       clk_i, rst_i,
-    input  word_st     pc_init_i,
-    output word_st     pc_tb,
-    output word_ut     instr_tb,
-    output xlen_ut     a_tb,
-    output xlen_st     rd_d_tb, regfile_tb [0:31], wd_tb,
-    output logic [7:0] ram_tb[CFG_DATA_ORG:CFG_DATA_END-1],
-    output logic       mem_write_tb, reg_write_tb,
-    output reg_e       rd_a_tb
+    input  logic      clk_i, rst_i,
+    input  word_st    pc_init_i
 );
 
     // Hazard Signals
@@ -25,7 +19,7 @@ module rv_stage3
     xlen_st result_s3,  read_data_s3,  target_addr_s3,
             src_a_s3, src_b_s3,   alu_result_s3,
             write_data_sized_s3, read_data_sized_s3;
-    word_st pc_next_ft, branch_target_addr_s3;
+    word_st pc_next_ft, bta_s3;
 
     // Pipelined Structs
     if_dc_t if_dc_d, if_dc_q;
@@ -35,16 +29,20 @@ module rv_stage3
      ***** Output/Debug Signals *****
      ********************************/
 
-    assign pc_tb        = if_dc_d.pc;
-    assign instr_tb     = if_dc_d.instr;
-    assign regfile_tb   = rv_stage3.register_file_inst.regfile;
-    assign a_tb         = rv_stage3.data_ram_inst.a_i;
-    assign wd_tb        = rv_stage3.data_ram_inst.wd_i;
-    assign ram_tb       = rv_stage3.data_ram_inst.ram;
-    assign mem_write_tb = dc_s3_q.ctrl.mem_write;
-    assign reg_write_tb = dc_s3_q.ctrl.reg_write;
-    assign rd_a_tb      = reg_e'(if_dc_q.instr[11:7]);
-    assign rd_d_tb      = result_s3;
+    core_dbg_t dbg;
+
+    assign dbg.pc         = if_dc_d.pc;
+    assign dbg.instr      = if_dc_d.instr;
+    assign dbg.a          = rv_stage3.data_ram_inst.a_i;
+    assign dbg.result     = result_s3;
+    assign dbg.wd         = rv_stage3.data_ram_inst.wd_i;
+    assign dbg.mem_write  = dc_s3_q.ctrl.mem_write;
+    assign dbg.reg_write  = dc_s3_q.ctrl.reg_write;
+    assign dbg.branch     = dc_s3_q.ctrl.branch;
+    assign dbg.jump       = dc_s3_q.ctrl.jump;
+    assign dbg.pc_src     = pc_src_s3;
+    assign dbg.bta        = bta_s3;
+    assign dbg.alu_result = alu_result_s3;
 
     /***********************
      ***** Hazard Unit *****
@@ -60,11 +58,11 @@ module rv_stage3
      ***** Fetch Stage *****
      ***********************/
 
-    mux4_ws mux4_ws_pc_next (
+    mux4 #(.type_t(word_st)) mux4_pc_next (
         .sel(pc_src_s3),
         .i0 (if_dc_d.pc_plus_4),
         .i1 (alu_result_s3),         // jalr, JTA = rs1 + imm
-        .i2 (branch_target_addr_s3), // B,    BTA = pc  + imm
+        .i2 (bta_s3), // B,    BTA = pc  + imm
         .i3 ('x),                    // Unreachable
         .y  (pc_next_ft)
     );
@@ -78,7 +76,7 @@ module rv_stage3
 
     assign if_dc_d.pc_plus_4 = if_dc_d.pc + CFG_XLEN'(4);
 
-    instruction_rom instr_rom_inst (
+    instruction_rom instruction_rom_inst (
         .instr_a_i(if_dc_d.pc), .instr_o(if_dc_d.instr)
     );
 
@@ -141,12 +139,12 @@ module rv_stage3
     );
 
     // Branch target address calculation
-    assign branch_target_addr_s3 = dc_s3_q.data.pc + dc_s3_q.data.imm_ext;
+    assign bta_s3 = dc_s3_q.data.pc + dc_s3_q.data.imm_ext;
 
     /***** ALU and Source Muxes *****/
 
     // ALU Src A Mux
-    mux4_xs mux4_xs_alu_a_src (
+    mux4 mux4_alu_a_src (
         .sel(dc_s3_q.ctrl.alu_a_src),
         .i0 (dc_s3_q.data.rs1_d), // Register/Immediate instructions
         .i1 ('0),            // U: lui
@@ -156,7 +154,7 @@ module rv_stage3
     );
 
     // ALU Src B Mux
-    mux2_xs mux2_xs_alu_b_src (
+    mux2 mux2_alu_b_src (
         .sel(dc_s3_q.ctrl.alu_b_src),
         .i0 (dc_s3_q.data.rs2_d),
         .i1 (dc_s3_q.data.imm_ext),
@@ -194,7 +192,7 @@ module rv_stage3
 
     /***** Writeback/ResultSrc Mux *****/
 
-    mux4_xs mux4_xs_result_src (
+    mux4 mux4_result_src (
         .sel(dc_s3_q.ctrl.result_src),
         .i0 (alu_result_s3),
         .i1 (read_data_sized_s3),

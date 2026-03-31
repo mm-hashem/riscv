@@ -87,7 +87,6 @@ package config_pkg;
         "TOHOST\n",
             "\tAddress: %0d\t0x%0x\n", TOHOST_ADDR, TOHOST_ADDR,
         "##### Test #####\n",
-        "Testbench: tb.sv\n",
         "SW Test: %s\n\n", testname);
     endfunction : dispConfig
 
