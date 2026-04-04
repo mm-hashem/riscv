@@ -2,11 +2,12 @@ module memory_loader
     import config_pkg::*;
 #(
     parameter string MEM_TYPE,
-    parameter int    ORG_ADDR,
+    parameter int    WIDTH,
+                     ORG_ADDR,
                      END_ADDR
 )
 (
-    ref logic [7:0] memory [ORG_ADDR:END_ADDR-1]
+    ref logic [WIDTH-1:0] memory [ORG_ADDR:END_ADDR-1]
 );
 
     string TESTNAME;

@@ -5,7 +5,7 @@ module rv_core_abi_assert
     input logic   clk_i, rst_i,
                   mem_write,
     input word_st pc,
-    input xlen_st alu_result
+    input xlen_st a
 );
 
     // Validating data memory addresses on write operations
@@ -13,7 +13,7 @@ module rv_core_abi_assert
         @(posedge clk_i)
         disable iff (rst_i)
         mem_write |->
-            (alu_result >= CFG_DATA_ORG && alu_result < CFG_DATA_END)
+            (a >= CFG_DATA_ORG && a < CFG_DATA_END)
     endproperty : valid_data_addr
 
     // Validating instruction memory addresses

@@ -3,17 +3,11 @@ module tohost
     import config_pkg::*;
     import tb_utils_pkg::*;
 (
-    input logic       clk_i,
-    ref   logic [7:0] ram [CFG_DATA_ORG:CFG_DATA_END-1] // todo: pass tohost memory location only
+    input logic   clk_i,
+    input xlen_st TOHOST
 );
 
-    xlen_st TOHOST;
     string  TESTNAME;
-
-    always @(posedge clk_i) begin : TOHOST_READ
-        for (int i = 0; i < MASK_LEN; i++)
-            TOHOST[i*8+:8] = ram[TOHOST_ADDR + i];
-    end : TOHOST_READ
 
     /***** Initialization of the processor *****/
 

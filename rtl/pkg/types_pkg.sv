@@ -21,7 +21,6 @@ package types_pkg;
         OP_B       = 7'b1100011,
         OP_I_JALR  = 7'b1100111,
         OP_J       = 7'b1101111,
-        OP_I_ECALL = 7'b1110011,
         OP_I_ALU_W = 7'b0011011,
         OP_R_W     = 7'b0111011
     } opcode_e;
@@ -113,16 +112,16 @@ package types_pkg;
 
     /***** Memory Enums *****/
 
-    typedef enum logic [7:0] { 
-        BYTE  = 8'b00000001,
-        HALF  = 8'b00000011,
-        WORD  = 8'b00001111,
-        DWORD = 8'b11111111
+    typedef enum logic [1:0] { 
+        BYTE  = 2'b00,
+        HALF  = 2'b01,
+        WORD  = 2'b10,
+        DWORD = 2'b11
     } data_size_e;
 
     typedef enum logic { 
-        UNSIGNED = 1'b0,
-        SIGNED   = 1'b1
+        ZEXT = 1'b0,
+        SEXT = 1'b1
     } data_sign_e;
 
     typedef struct packed {

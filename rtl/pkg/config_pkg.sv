@@ -1,5 +1,36 @@
 package config_pkg;
 
+    /***** Core Configuration *****/
+
+    typedef enum logic [1:0] {
+        SINGLE  = 2'b00,
+        STAGE3  = 2'b01,
+        STAGE5  = 2'b10,
+        UNKNOWN = 2'b11
+    } core_e;
+
+`ifdef XLEN
+    localparam CFG_XLEN = `XLEN;
+`else
+    localparam CFG_XLEN = -1;
+`endif
+
+`ifdef SINGLE
+    localparam core_e CFG_CORE = SINGLE;
+`elsif STAGE3
+    localparam core_e CFG_CORE = STAGE3;
+`elsif STAGE5
+    localparam core_e CFG_CORE = STAGE5;
+`else
+    localparam core_e CFG_CORE = UNKNOWN;
+`endif
+
+`ifdef ZBA
+    localparam CFG_ZBA = 1;
+`else
+    localparam CFG_ZBA = 0;
+`endif
+
     /***** Memory Configuration *****/
 
     localparam CFG_TEXT_ORG = 'h0,
@@ -14,37 +45,16 @@ package config_pkg;
 
     localparam CFG_STACK_ORG = CFG_DATA_END - CFG_STACK_LENGTH - 8;
 
-    /***** Core Configuration *****/
+    localparam CFG_DATA_BYTES  = CFG_XLEN == 64 ? 8 : 4;
+    localparam CFG_BYTE_OFFSET = CFG_XLEN == 64 ? 3 : 2; // Number of bits for byte offset within a word
 
-    typedef enum logic [1:0] {
-        SINGLE  = 2'b00,
-        STAGE3  = 2'b01,
-        UNKNOWN = 2'b10
-    } core_e;
+    // Memory indexing
+    localparam CFG_TEXT_ORG_ARR = CFG_TEXT_ORG / 4, // Word addressing for text memory
+               CFG_TEXT_END_ARR = CFG_TEXT_END / 4,
+               CFG_DATA_ORG_ARR = CFG_DATA_ORG / CFG_DATA_BYTES,
+               CFG_DATA_END_ARR = CFG_DATA_END / CFG_DATA_BYTES;
 
-`ifdef XLEN
-    localparam CFG_XLEN = `XLEN;
-`else
-    localparam CFG_XLEN = -1;
-`endif
-
-`ifdef SINGLE
-    localparam core_e CFG_CORE = SINGLE;
-
-`elsif STAGE3
-    localparam core_e CFG_CORE = STAGE3;
-`else
-    localparam core_e CFG_CORE = UNKNOWN;
-`endif
-
-`ifdef ZBA
-    localparam CFG_ZBA = 1;
-`else
-    localparam CFG_ZBA = 0;
-`endif
-
-    logic [CFG_XLEN-1:0] TOHOST_ADDR = CFG_TEXT_LENGTH + CFG_DATA_LENGTH - 8;
-    localparam MASK_LEN = (CFG_XLEN == 64) ? 8 : 4;
+    logic [CFG_XLEN-1:0] CFG_TOHOST_ADDR = (CFG_TEXT_LENGTH + CFG_DATA_LENGTH - 8) / CFG_DATA_BYTES; // Address of TOHOST in the data memory
 
     function automatic void checkConfig;
         if (CFG_XLEN == -1)      $fatal(1, "XLEN is not defined.");
@@ -60,6 +70,7 @@ package config_pkg;
         string core_str, zba_str;
 
         if      (CFG_CORE == STAGE3) core_str = "3-stage pipeline";
+        else if (CFG_CORE == STAGE5) core_str = "5-stage pipeline";
         else if (CFG_CORE == SINGLE) core_str = "Single-cycle";
         if      (CFG_ZBA)            zba_str  = "ZBA";
 
@@ -67,7 +78,7 @@ package config_pkg;
         "- CFG_CORE  : %s\n",  core_str,
         "- XLEN      : %0d\n", CFG_XLEN,
         "- Extensions: %s\n",  zba_str,
-        "- Data Mask : %0d\n", MASK_LEN,
+        "- Data Bytes: %0d\n", CFG_DATA_BYTES,
         "##### MEMORY FILES #####\n",
         "- Data Mem File: %s\n", {"build/memory/data_", testname, ".mem"},
         "- Text Mem File: %s\n", {"build/memory/text_", testname, ".mem"},
@@ -85,7 +96,7 @@ package config_pkg;
             "\tEnds   at: %d\t0x%0x\n", CFG_STACK_ORG,    CFG_STACK_ORG,
             "\tSize     : %d\t0x%0x\n", CFG_STACK_LENGTH, CFG_STACK_LENGTH,
         "TOHOST\n",
-            "\tAddress: %0d\t0x%0x\n", TOHOST_ADDR, TOHOST_ADDR,
+            "\tAddress: %0d\t0x%0x\n", CFG_TOHOST_ADDR, CFG_TOHOST_ADDR,
         "##### Test #####\n",
         "SW Test: %s\n\n", testname);
     endfunction : dispConfig

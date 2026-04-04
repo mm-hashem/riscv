@@ -6,8 +6,7 @@ module rv_top
     timeunit 1ns/1ns;
 
     /***** Declarations *****/
-    logic      clk, rst;
-    word_st    pc_init;
+    logic clk, rst;
 
     /***** Clock Generation *****/
     always #5 clk = ~clk;
@@ -16,16 +15,20 @@ module rv_top
     generate
         if (CFG_CORE == SINGLE) begin : RV_CORE
             rv_single rv_core_inst (
-                .clk_i    (clk),
-                .rst_i    (rst),
-                .pc_init_i(pc_init)
+                .clk_i(clk),
+                .rst_i(rst)
             );
         end : RV_CORE
         else if (CFG_CORE == STAGE3) begin : RV_CORE
             rv_stage3 rv_core_inst (
-                .clk_i    (clk),
-                .rst_i    (rst),
-                .pc_init_i(pc_init)
+                .clk_i(clk),
+                .rst_i(rst)
+            );
+        end : RV_CORE
+        else if (CFG_CORE == STAGE5) begin : RV_CORE
+            rv_stage5 rv_core_inst (
+                .clk_i(clk),
+                .rst_i(rst)
             );
         end : RV_CORE
         else
@@ -41,12 +44,10 @@ module rv_top
            The simulation will exit if the configuration is invalid. */
         checkConfig();
 
-
         clk = 0;
-
-        // Resetting core and the PC
-        rst     = 1;
-        pc_init = '0;
+        
+        // Resetting core
+        rst = 1;
 
         repeat (3) @(posedge clk);
 

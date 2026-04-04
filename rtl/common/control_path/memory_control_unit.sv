@@ -11,22 +11,22 @@ module memory_control_unit
     always_comb begin : DataControl
         if (mem_write_i) begin
             unique case (funct3_i)
-                F3_SB  : data_ctrl_o = '{size: BYTE,  sign: UNSIGNED};
-                F3_SH  : data_ctrl_o = '{size: HALF,  sign: UNSIGNED};
-                F3_SW  : data_ctrl_o = '{size: WORD,  sign: UNSIGNED};
-                F3_SD  : data_ctrl_o = '{size: DWORD, sign: UNSIGNED};
-                default: data_ctrl_o = '{size: BYTE,  sign: UNSIGNED};
+                F3_SB  : data_ctrl_o = '{size: BYTE,  sign: ZEXT};
+                F3_SH  : data_ctrl_o = '{size: HALF,  sign: ZEXT};
+                F3_SW  : data_ctrl_o = '{size: WORD,  sign: ZEXT};
+                F3_SD  : data_ctrl_o = '{size: DWORD, sign: ZEXT};
+                default: data_ctrl_o = '{size: BYTE,  sign: ZEXT};
             endcase
         end else begin
             unique case (funct3_i)
-                F3_LB  : data_ctrl_o = '{size: BYTE,  sign: SIGNED};
-                F3_LH  : data_ctrl_o = '{size: HALF,  sign: SIGNED};
-                F3_LW  : data_ctrl_o = '{size: WORD,  sign: SIGNED};
-                F3_LBU : data_ctrl_o = '{size: BYTE,  sign: UNSIGNED};
-                F3_LHU : data_ctrl_o = '{size: HALF,  sign: UNSIGNED};
-                F3_LWU : data_ctrl_o = '{size: WORD,  sign: UNSIGNED};
-                F3_LD  : data_ctrl_o = '{size: DWORD, sign: SIGNED};
-                default: data_ctrl_o = '{size: BYTE,  sign: UNSIGNED};
+                F3_LB  : data_ctrl_o = '{size: BYTE,  sign: SEXT};
+                F3_LH  : data_ctrl_o = '{size: HALF,  sign: SEXT};
+                F3_LW  : data_ctrl_o = '{size: WORD,  sign: SEXT};
+                F3_LBU : data_ctrl_o = '{size: BYTE,  sign: ZEXT};
+                F3_LHU : data_ctrl_o = '{size: HALF,  sign: ZEXT};
+                F3_LWU : data_ctrl_o = '{size: WORD,  sign: ZEXT};
+                F3_LD  : data_ctrl_o = '{size: DWORD, sign: SEXT};
+                default: data_ctrl_o = '{size: BYTE,  sign: ZEXT};
             endcase
         end
     end : DataControl

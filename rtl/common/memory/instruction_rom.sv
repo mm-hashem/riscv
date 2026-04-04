@@ -6,10 +6,12 @@ module instruction_rom
     output word_ut instr_o
 );
 
-    logic [7:0] rom [CFG_TEXT_ORG:CFG_TEXT_END-1];
+    (*rom_style = "block" *) logic [31:0] rom [CFG_TEXT_ORG_ARR:CFG_TEXT_END_ARR-1];
 
-    always_comb
-        for (int i = 0; i < 4; i++)
-            instr_o[i*8+:8] = rom[instr_a_i + i];
+`ifdef SYNTH
+    initial $readmemh("./build/memory/text.mem", rom); // todo path and name
+`endif
+
+    assign instr_o = rom[instr_a_i[31:2]];
 
 endmodule: instruction_rom

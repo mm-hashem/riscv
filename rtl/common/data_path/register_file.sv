@@ -13,11 +13,11 @@ module register_file
     xlen_st regfile [0:31] = '{default:'0};
 
     generate
-        if (CFG_CORE == STAGE3) begin : STAGE3_REGWR
+        if (CFG_CORE inside {STAGE3, STAGE5}) begin : PIPELINED_REGWR
             always_ff @(negedge clk_i)
                 if (rd_we_i && !rst_i && !(rd_a_i == 5'b0))
                     regfile[rd_a_i] <= rd_d_i;
-        end : STAGE3_REGWR
+        end : PIPELINED_REGWR
         
         else if (CFG_CORE == SINGLE) begin : SINGLE_REGWR
             always_ff @(posedge clk_i)

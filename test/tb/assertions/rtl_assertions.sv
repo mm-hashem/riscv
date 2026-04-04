@@ -81,39 +81,16 @@ module regfile_assert
 
 endmodule
 
-module data_ram_assert
-    import types_pkg::*;
-(
-    input logic       clk_i, rst_i,
-                      we_i,
-    input xlen_ut     a_i,
-    input data_size_e data_size_i
-);
-
-    property data_addr_alignment;
-        @(posedge clk_i)
-        disable iff (rst_i)
-        we_i |-> (data_size_i == BYTE)                       || // Any address
-                 (data_size_i == HALF  && a_i[0]   == 1'b0)  || // Halfword  -aligned
-                 (data_size_i == WORD  && a_i[1:0] == 2'b00) || // Word      -aligned
-                 (data_size_i == DWORD && a_i[2:0] == 3'b000)   // Doubleword-aligned;
-    endproperty : data_addr_alignment
-
-    DATA_ADDR_ALIGNMENT_CHK: assert property (data_addr_alignment);
-    
-endmodule
-
 module program_counter_assert
 (
     input logic              clk_i, rst_i,
-    input types_pkg::word_st pc_init_i, pc_next_i, pc_o
+    input types_pkg::word_st pc_next_i, pc_o
 );
 
     property pc_alignment;
         @(posedge clk_i)
         disable iff (rst_i)
-        ((pc_init_i[1:0] == 2'b00) &&
-         (pc_next_i[1:0] == 2'b00) &&
+        ((pc_next_i[1:0] == 2'b00) &&
          (pc_o     [1:0] == 2'b00))
     endproperty : pc_alignment
 
@@ -124,10 +101,14 @@ endmodule : program_counter_assert
 module rv_core_assert
     import types_pkg::*;
 (
-    input logic    clk_i, rst_i,
-                   branch, jump,
-    input pc_src_e pc_src,
-    input word_st  pc, bta, alu_result
+    input logic        clk_i, rst_i,
+                       branch, jump,
+                       we,
+    input pc_src_e     pc_src,
+    input data_size_e  data_size,
+    input result_src_e result_src,
+    input word_st      pc, bta, alu_result,
+    input xlen_ut      a
 );
 
     property branch_target_taken;
@@ -142,7 +123,19 @@ module rv_core_assert
         (jump && pc_src == PCSRC_JMP) |=> (pc == $past(alu_result));
     endproperty : jump_target_taken
 
-    BRANCH_TARGET_TAKEN_CHK: assert property (branch_target_taken);
-    JUMP_TARGET_TAKEN_CHK  : assert property (jump_target_taken);
+    property data_ram_addr_alignment;
+        @(posedge clk_i)
+        disable iff (rst_i)
+        (we || result_src == RESULT_MEMORY) |->
+            ( (data_size == BYTE)                        || // Any address
+             ((data_size == HALF)  && (a[0]   == 1'b0))  || // Halfword  -aligned
+             ((data_size == WORD)  && (a[1:0] == 2'b00)) || // Word      -aligned
+             ((data_size == DWORD) && (a[2:0] == 3'b000)))  // Doubleword-aligned;
+    endproperty : data_ram_addr_alignment
+
+    BRANCH_TARGET_TAKEN_CHK    : assert property (branch_target_taken);
+    JUMP_TARGET_TAKEN_CHK      : assert property (jump_target_taken);
+    DATA_RAM_ADDR_ALIGNMENT_CHK: assert property (data_ram_addr_alignment)
+                                    else $fatal(1, "Memory misaligned access at address 0x%x", a);
 
 endmodule : rv_core_assert

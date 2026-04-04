@@ -3,8 +3,7 @@ module rv_single
     import types_pkg::*;
     import dbg_pkg::*;
 (
-    input  logic      clk_i, rst_i,
-    input  word_st    pc_init_i
+    input logic clk_i, rst_i
 );
 
     // Data Signals
@@ -27,18 +26,20 @@ module rv_single
     alu_src_b_e  alu_b_src;
     alu_e        alu_ctrl;
     data_ctrl_t  data_ctrl;
+    logic [CFG_DATA_BYTES-1:0] byte_enable;
 
     /*************************
      ***** Debug Signals *****
      *************************/
 
+`ifndef SYNTH
      core_dbg_t dbg;
 
     assign dbg.pc         = pc;
     assign dbg.instr      = instr;
-    assign dbg.a          = rv_single.data_ram_inst.a_i;
+    assign dbg.a          = alu_result; // todo rename
     assign dbg.result     = result;
-    assign dbg.wd         = rv_single.data_ram_inst.wd_i;
+    assign dbg.wd         = write_data_sized;
     assign dbg.mem_write  = mem_write;
     assign dbg.reg_write  = reg_write;
     assign dbg.branch     = branch;
@@ -46,21 +47,25 @@ module rv_single
     assign dbg.pc_src     = pc_src;
     assign dbg.bta        = bta;
     assign dbg.alu_result = alu_result;
+    assign dbg.data_size  = data_ctrl.size;
+    assign dbg.result_src = result_src;
+    assign dbg.rd_a       = reg_e'(instr[11:7]);
+`endif
 
     /************************************************/
 
     mux4 #(.type_t (word_st)) mux4_pc_next (
         .sel(pc_src),
         .i0 (pc_plus_4),
-        .i1 (alu_result),         // jalr, JTA = rs1 + imm
-        .i2 (bta), // B,    BTA = pc  + imm
-        .i3 ('x),                 // Unreachable
+        .i1 ({alu_result[31:2], 2'b00}), // J, I: jalr: JTA = rs1 + imm
+        .i2 (bta),                       // B,          BTA = pc  + imm
+        .i3 ('x),                        // Unreachable
         .y  (pc_next)
     );
 
     program_counter program_counter_inst (
         .clk_i, .rst_i,
-        .pc_init_i(pc_init_i),
+        .en_i     (1'b1),
         .pc_next_i(pc_next),
         .pc_o     (pc)
     );
@@ -114,7 +119,7 @@ module rv_single
         .sel(alu_a_src),
         .i0 (rs1_d), // Register/Immediate instructions
         .i1 ('0),    // U: lui
-        .i2 (pc),    // J, U: auipc
+        .i2 (pc),    // U, J: auipc
         .i3 ('x),    // Unreachable
         .y  (src_a)
     );
@@ -138,13 +143,15 @@ module rv_single
     store_unit store_unit_inst (
         .write_data_i(rs2_d),
         .data_size_i(data_ctrl.size),
-        .write_data_sized_o(write_data_sized)
+        .byte_offset_i(alu_result[CFG_BYTE_OFFSET-1:0]),
+        .write_data_sized_o(write_data_sized),
+        .byte_enable_o(byte_enable)
     );
 
     data_ram data_ram_inst (
         .clk_i, .rst_i,
         .we_i(mem_write),
-        .data_size_i(data_ctrl.size),
+        .byte_enable_i(byte_enable),
         .a_i (alu_result),
         .wd_i(write_data_sized),
         .rd_o(read_data)
@@ -153,12 +160,13 @@ module rv_single
     load_unit load_unit_inst (
         .read_data_i      (read_data),
         .data_ctrl_i      (data_ctrl),
+        .byte_offset_i    (alu_result[CFG_BYTE_OFFSET-1:0]),
         .read_data_sized_o(read_data_sized)
     );
 
     /***** Writeback/ResultSrc Mux *****/
 
-    mux4 mux4_result_src (
+    mux4 mux4_result (
         .sel(result_src),
         .i0 (alu_result),
         .i1 (read_data_sized),

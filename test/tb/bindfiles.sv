@@ -8,16 +8,18 @@ module binds
 
     bind data_ram memory_loader #(
         .MEM_TYPE("data"),
-        .ORG_ADDR(CFG_DATA_ORG),
-        .END_ADDR(CFG_DATA_END)
+        .WIDTH(CFG_XLEN),
+        .ORG_ADDR(CFG_DATA_ORG_ARR),
+        .END_ADDR(CFG_DATA_END_ARR)
     ) memory_loader_inst (
         .memory(ram)
     );
 
     bind instruction_rom memory_loader #(
         .MEM_TYPE("text"),
-        .ORG_ADDR(CFG_TEXT_ORG),
-        .END_ADDR(CFG_TEXT_END)
+        .WIDTH(32),
+        .ORG_ADDR(CFG_TEXT_ORG_ARR),
+        .END_ADDR(CFG_TEXT_END_ARR)
     ) memory_loader_inst (
         .memory(rom)
     );
@@ -37,25 +39,22 @@ module binds
         .regfile
     );
 
-    bind data_ram data_ram_assert data_ram_assert_inst (
-        .clk_i, .rst_i,
-        .we_i,
-        .a_i,
-        .data_size_i
-    );
-
     bind program_counter program_counter_assert program_counter_assert_inst (
         .clk_i,     .rst_i,
-        .pc_init_i, .pc_next_i, .pc_o
+        .pc_next_i, .pc_o
     );
 
     bind RV_CORE.rv_core_inst rv_core_assert rv_core_assert_inst (
         .clk_i, .rst_i,
         .branch(dbg.branch), .jump(dbg.jump),
+        .we(dbg.mem_write),
         .pc_src(dbg.pc_src),
         .pc(dbg.pc), .bta(dbg.bta),
-        .alu_result(dbg.alu_result)
-    ); // todo use rv_single/rv_stage3
+        .alu_result(dbg.alu_result),
+        .result_src(dbg.result_src),
+        .data_size(dbg.data_size),
+        .a(dbg.a)
+    );
 
     /***** ABI Assertions *****/
 
@@ -63,8 +62,8 @@ module binds
         .clk_i, .rst_i,
         .mem_write (dbg.mem_write),
         .pc        (dbg.pc),
-        .alu_result(dbg.alu_result)
-    ); // todo use rv_single/rv_stage3
+        .a(dbg.a)
+    );
 
     /***** Monitor *****/
 
@@ -75,12 +74,13 @@ module binds
         .mem_write(dbg.mem_write),
         .pc  (dbg.pc),     .instr(dbg.instr),
         .rd_d(dbg.result), .a    (dbg.a),
-        .wd_i(dbg.wd)
+        .wd_i(dbg.wd),
+        .rd_a(dbg.rd_a)
     );
 `endif
 
     /***** TOHOST *****/
 
-    bind data_ram tohost tohost_inst ( .clk_i, .ram );
+    bind data_ram tohost tohost_inst ( .clk_i, .TOHOST(ram[CFG_TOHOST_ADDR]) );
 
 endmodule : binds
