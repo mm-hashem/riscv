@@ -44,6 +44,7 @@ endif
 # Input Processing
 override TEST := $(patsubst ./test/sw/%,%,$(TEST))
 TEST_SLUG     := $(basename $(notdir $(TEST)))
+DATA_BYTES    := $(if $(filter 64,$(XLEN)),8,4)
 
 ####################
 ##### GCC Flow #####
@@ -143,15 +144,22 @@ $(ELF): $(LINKER) $(OBJECTS) | $(BUILD_SW_DIR)
 
 # Copy instructions to text.mem
 $(MEMORY_DIR)/text_$(TEST_SLUG).mem: $(ELF) | $(MEMORY_DIR)
-	$(OBJCOPY) $(OBJCOPYFLAGS) --only-section=.text $< $@
+	$(OBJCOPY) $(OBJCOPYFLAGS) --verilog-data-width=4 --only-section=.text $< $@
 
 $(MEMORY_DIR)/data_$(TEST_SLUG).mem: $(ELF) | $(MEMORY_DIR)
-	$(OBJCOPY) $(OBJCOPYFLAGS)  --only-section=.rodata --only-section=.data \
+	$(OBJCOPY) $(OBJCOPYFLAGS) --verilog-data-width=$(DATA_BYTES) --only-section=.rodata --only-section=.data \
 	--only-section=.bss --gap-fill 0x00 --pad-to $(END_ADDR) $< $@
 
 ###########################
 ##### Simulation Flow #####
 ###########################
+
+# Directories
+TB_DIR   := $(TEST_DIR)/tb
+SIM_DIR  := $(TEST_DIR)/sim
+WORK_DIR := $(BUILD_DIR)/work
+LOGS_DIR := $(BUILD_DIR)/logs
+RTL_DIR  := ./rtl
 
 # Flags
 CMPLOG_FLAGS := $(if $(filter $(RGRS),1),,-l $(LOGS_DIR)/compilation.log)
@@ -164,13 +172,6 @@ VSIMFLAGS := $(SIMLOG_FLAGS) $(if $(filter $(SIMGUI),1),-gui,$(if $(filter $(RGR
 # Definitions
 VLOGDEFS := +define+XLEN=$(XLEN)+$(CORE)$(if $(EXT),+$(EXT))$(if $(filter $(RGRS),1),+RGRS,)
 
-# Directories
-TB_DIR   := $(TEST_DIR)/tb
-SIM_DIR  := $(TEST_DIR)/sim
-WORK_DIR := $(BUILD_DIR)/work
-LOGS_DIR := $(BUILD_DIR)/logs
-RTL_DIR  := ./rtl
-
 # Files
 TOP_FILE     := $(TB_DIR)/rv_top.sv
 PKG_FILES    := -f $(SIM_DIR)/filelist_pkg.f
@@ -180,6 +181,8 @@ ifeq ($(CORE),SINGLE)
     CORE_FILES += $(RTL_DIR)/cores/rv_single.sv
 else ifeq ($(CORE),STAGE3)
     CORE_FILES += $(RTL_DIR)/pipelined/stage3/hazard_unit.sv $(RTL_DIR)/cores/rv_stage3.sv
+else ifeq ($(CORE),STAGE5)
+	CORE_FILES += $(RTL_DIR)/pipelined/stage3/hazard_unit.sv $(RTL_DIR)/cores/rv_stage5.sv
 endif
 
 RTL_FILES := $(PKG_FILES) $(COMMON_FILES) $(CORE_FILES)
@@ -192,7 +195,6 @@ DOCMD := $(if $(filter $(SIMGUI),1),do $(DOFILE);,$(if $(filter $(RGRS),1),quiet
 $(WORK_DIR) $(LOGS_DIR):
 	@mkdir -p $@
 
-# todo $(WORK_DIR)/_info update_offsets | $(WORK_DIR)
 simlib: | $(WORK_DIR)
 	vlib $(WORK_DIR)
 
