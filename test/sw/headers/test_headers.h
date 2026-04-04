@@ -5,18 +5,20 @@
     #define LD_INS ld
     #define ST_INS sd
     #define ALIGNB 3
+    #define MWORD dword
 #else
     #define LD_INS lw
     #define ST_INS sw
     #define ALIGNB 2
+    #define MWORD word
 #endif
 
 // Store ra and sp register in the .data section for riscv-tests
 #define STORE_RA_SP_DATA \
     .data;               \
-    .align 4;            \
-    RSP: .word 0;        \
-    RRA: .word 0;        \
+    .align ALIGNB;       \
+    RSP: .MWORD 0;       \
+    RRA: .MWORD 0;       \
     .previous;           \
     la x31, RSP;         \
     ST_INS sp, 0(x31);   \

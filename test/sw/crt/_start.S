@@ -8,18 +8,12 @@
 _start:
     .option push
     .option norelax
-    la gp, __global_pointer$
+    la gp, __global_pointer$;
     .option pop
 
-    la sp, _stack_top
+    la sp, _stack_top;
     
-    addi sp, sp, -8
-    ST_INS ra, 0(sp)
-
-    call main
-
-    LD_INS ra, 0(sp);
-    addi sp, sp, -8;
+    call main;
     
-    call _exit
+    call _exit;
 .end
