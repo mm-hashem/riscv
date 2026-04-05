@@ -66,7 +66,7 @@ module rv_single
     );
 
     program_counter program_counter_inst (
-        .clk_i, .rst_i,
+        .clk_i,   .rst_i,
         .en_i     (1'b1),
         .pc_next_i(pc_next),
         .pc_o     (pc)
@@ -94,7 +94,7 @@ module rv_single
     );
 
     register_file register_file_inst (
-        .clk_i, .rst_i,
+        .clk_i,
         .rd_we_i(reg_write),
         .rs1_a_i(reg_e'(instr[19:15])), 
         .rs2_a_i(reg_e'(instr[24:20])),
@@ -161,7 +161,7 @@ module rv_single
     );
 
     data_ram data_ram_inst (
-        .clk_i, .rst_i,
+        .clk_i,
         .we_i(mem_write),
         .byte_enable_i(byte_enable),
         .a_i (alu_result),

@@ -59,9 +59,9 @@ endmodule : main_decoder_assert
 module regfile_assert
     import types_pkg::*;
 (
-    input     logic   clk_i, rst_i,
-    input     reg_e   rs1_a_i, rs2_a_i, rd_a_i,
-    input var xlen_st regfile [0:31]
+    input logic   clk_i, rst_i,
+    input reg_e   rs1_a_i, rs2_a_i, rd_a_i,
+    input xlen_st rs1_d_o, rs2_d_o
 );
 
     property reg_addr_valid;
@@ -70,14 +70,21 @@ module regfile_assert
         ((rs1_a_i inside {[REG_ZERO:REG_T6]})) && (rs2_a_i inside {[REG_ZERO:REG_T6]}) && (rd_a_i inside {[REG_ZERO:REG_T6]})
     endproperty : reg_addr_valid
 
-    property reg_zero_immutable;
+    property rs1_zero;
         @(posedge clk_i)
         disable iff (rst_i)
-        regfile[0] == '0
-    endproperty : reg_zero_immutable
+        (rs1_a_i == REG_ZERO) |-> (rs1_d_o == '0)
+    endproperty : rs1_zero
 
-    REGFILE_ADDR_CHK   : assert property (reg_addr_valid);
-    REGFILE_ZERO_CHK   : assert property (reg_zero_immutable);
+    property rs2_zero;
+        @(posedge clk_i)
+        disable iff (rst_i)
+        (rs2_a_i == REG_ZERO) |-> (rs2_d_o == '0)
+    endproperty : rs2_zero
+
+    REG_ADDR_VALID_CHK: assert property (reg_addr_valid);
+    RS1_ZERO_CHK      : assert property (rs1_zero);
+    RS2_ZERO_CHK      : assert property (rs2_zero);
 
 endmodule
 

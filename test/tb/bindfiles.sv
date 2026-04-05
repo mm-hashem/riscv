@@ -34,9 +34,9 @@ module binds
     );
 
     bind register_file regfile_assert regfile_assert_inst (
-        .clk_i,   .rst_i,
+        .clk_i,   .rst_i(rst_i),
         .rs1_a_i, .rs2_a_i, .rd_a_i,
-        .regfile
+        .rs1_d_o, .rs2_d_o
     );
 
     bind program_counter program_counter_assert program_counter_assert_inst (

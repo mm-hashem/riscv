@@ -2,7 +2,7 @@ module data_ram
     import config_pkg::*;
     import types_pkg::*;
 (
-    input  logic                      clk_i, rst_i,
+    input  logic                      clk_i,
                                       we_i,
     input  logic [CFG_DATA_BYTES-1:0] byte_enable_i,
     input  xlen_ut                    a_i, wd_i,

@@ -86,7 +86,7 @@ module rv_stage5
     );
 
     program_counter program_counter_inst (
-        .clk_i, .rst_i,
+        .clk_i,   .rst_i,
         .en_i     (~stall_ft),
         .pc_next_i(pc_next_ft),
         .pc_o     (ft_dc_d.pc)
@@ -125,7 +125,7 @@ module rv_stage5
     );
 
     register_file register_file_inst (
-        .clk_i, .rst_i,
+        .clk_i,
         .rd_we_i(me_wb_q.ctrl.reg_write),
         .rs1_a_i(dc_ex_d.ctrl.rs1_a),
         .rs2_a_i(dc_ex_d.ctrl.rs2_a),
@@ -250,7 +250,7 @@ module rv_stage5
     );
 
     data_ram data_ram_inst (
-        .clk_i, .rst_i,
+        .clk_i,
         .we_i(ex_me_q.ctrl.mem_write),
         .byte_enable_i(byte_enable_me),
         .a_i (ex_me_q.data.alu_result),
