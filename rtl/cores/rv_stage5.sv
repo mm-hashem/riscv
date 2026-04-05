@@ -21,7 +21,7 @@ module rv_stage5
     // Data Signals    
     xlen_st src_a_fwd_ex_data,
             src_a_ex,          src_b_ex,
-            read_data_me,      write_data_sized_me,
+            read_data_wb,      write_data_sized_me,
             read_data_sized_wb,
             result_wb;
     word_st pc_next_ft, bta_ex;
@@ -139,6 +139,8 @@ module rv_stage5
         .imm_ext_o(dc_ex_d.data.imm_ext)
     );
 
+    /***** Decode-Execute Stage Register *****/
+
     always_ff @(posedge clk_i) begin : DecodeExecuteReg
         if (rst_i || flush_ex) begin
             dc_ex_q.ctrl <= '0;
@@ -159,7 +161,7 @@ module rv_stage5
     assign ex_me_d.ctrl.data_ctrl  = dc_ex_q.ctrl.data_ctrl;
     assign ex_me_d.data.pc_plus_4  = dc_ex_q.data.pc_plus_4;
 
-    pc_control_unit pc_control_unit_s3_inst (
+    pc_control_unit pc_control_unit_inst (
         .jump_i     (dc_ex_q.ctrl.jump), .branch_i   (dc_ex_q.ctrl.branch), 
         .zero_i     (zero_ex),           .branch_op_i(dc_ex_q.ctrl.branch_op),
         .less_than_i(ex_me_d.data.alu_result[0]),
@@ -169,9 +171,6 @@ module rv_stage5
     // Branch target address calculation
     assign bta_ex = dc_ex_q.data.pc + dc_ex_q.data.imm_ext;
 
-    /*****************
-     ***** ALU *******
-     *****************/
 
     /***** Forwarding Muxes *****/
 
@@ -238,12 +237,13 @@ module rv_stage5
     assign me_wb_d.ctrl.rd_a       = ex_me_q.ctrl.rd_a;
     assign me_wb_d.ctrl.result_src = ex_me_q.ctrl.result_src;
     assign me_wb_d.ctrl.reg_write  = ex_me_q.ctrl.reg_write;
+    assign me_wb_d.ctrl.data_ctrl  = ex_me_q.ctrl.data_ctrl;
     assign me_wb_d.data.pc_plus_4  = ex_me_q.data.pc_plus_4;
     assign me_wb_d.data.alu_result = ex_me_q.data.alu_result;
 
     store_unit store_unit_inst (
-        .write_data_i(ex_me_q.data.src_b_fwd_ex_data),
-        .data_size_i(ex_me_q.ctrl.data_ctrl.size),
+        .write_data_i (ex_me_q.data.src_b_fwd_ex_data),
+        .data_size_i  (ex_me_q.ctrl.data_ctrl.size),
         .byte_offset_i(ex_me_q.data.alu_result[CFG_BYTE_OFFSET-1:0]),
         .write_data_sized_o(write_data_sized_me),
         .byte_enable_o(byte_enable_me)
@@ -255,14 +255,7 @@ module rv_stage5
         .byte_enable_i(byte_enable_me),
         .a_i (ex_me_q.data.alu_result),
         .wd_i(write_data_sized_me),
-        .rd_o(read_data_me)
-    );
-
-    load_unit load_unit_inst (
-        .read_data_i      (read_data_me),
-        .data_ctrl_i      (ex_me_q.ctrl.data_ctrl),
-        .byte_offset_i    (ex_me_q.data.alu_result[CFG_BYTE_OFFSET-1:0]),
-        .read_data_sized_o(me_wb_d.data.read_data_sized)
+        .rd_o(read_data_wb)
     );
 
     always_ff @(posedge clk_i) begin : MemoryWritebackReg
@@ -277,10 +270,17 @@ module rv_stage5
      ***** Writeback Stage *****
      ***************************/
 
+    load_unit load_unit_inst (
+        .read_data_i      (read_data_wb),
+        .data_ctrl_i      (me_wb_q.ctrl.data_ctrl),
+        .byte_offset_i    (me_wb_q.data.alu_result[CFG_BYTE_OFFSET-1:0]),
+        .read_data_sized_o(read_data_sized_wb)
+    );
+
     mux4 mux4_result (
         .sel(me_wb_q.ctrl.result_src),
         .i0 (me_wb_q.data.alu_result),
-        .i1 (me_wb_q.data.read_data_sized),
+        .i1 (read_data_sized_wb),
         .i2 (me_wb_q.data.pc_plus_4),
         .i3 ('x), // Unreachable
         .y  (result_wb)

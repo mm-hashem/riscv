@@ -81,12 +81,12 @@ package pipeline_pkg;
         struct packed {
             result_src_e result_src;
             logic        reg_write;
+            data_ctrl_t  data_ctrl;
             reg_e        rd_a;
         } ctrl;
 
         struct packed {
-            xlen_st alu_result, src_b_fwd_ex_data,
-                    read_data_sized;
+            xlen_st alu_result, src_b_fwd_ex_data;
             word_st pc_plus_4;
         } data;
 

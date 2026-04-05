@@ -17,12 +17,24 @@ module data_ram
     initial $readmemh("./build/memory/data.mem", ram); // todo path and name
 `endif
 
-    always_ff @(posedge clk_i)
-        if (we_i)
-            for (int i; i < CFG_DATA_BYTES; i++)
-                if (byte_enable_i[i])
-                    ram[a_i[CFG_XLEN-1:SHAMT]][i*8+:8] <= wd_i[i*8+:8];
-
-    assign rd_o = ram[a_i[CFG_XLEN-1:SHAMT]];
+    generate
+        if (CFG_CORE == STAGE5) begin
+            always_ff @(posedge clk_i) begin
+                if (we_i) begin
+                    for (int i; i < CFG_DATA_BYTES; i++)
+                        if (byte_enable_i[i])
+                            ram[a_i[CFG_XLEN-1:SHAMT]][i*8+:8] <= wd_i[i*8+:8];
+                end else
+                    rd_o <= ram[a_i[CFG_XLEN-1:SHAMT]];
+            end
+        end else if (CFG_CORE == SINGLE) begin
+            always_ff @(posedge clk_i)
+                if (we_i)
+                    for (int i; i < CFG_DATA_BYTES; i++)
+                        if (byte_enable_i[i])
+                            ram[a_i[CFG_XLEN-1:SHAMT]][i*8+:8] <= wd_i[i*8+:8];
+            assign rd_o = ram[a_i[CFG_XLEN-1:SHAMT]];
+        end
+    endgenerate
 
 endmodule: data_ram

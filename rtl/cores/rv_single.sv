@@ -52,7 +52,9 @@ module rv_single
     assign dbg.rd_a       = reg_e'(instr[11:7]);
 `endif
 
-    /************************************************/
+    /***********************
+     ***** Fetch Stage *****
+     ***********************/
 
     mux4 #(.type_t (word_st)) mux4_pc_next (
         .sel(pc_src),
@@ -75,6 +77,10 @@ module rv_single
     instruction_rom instruction_rom_inst (
         .instr_a_i(pc), .instr_o(instr)
     );
+
+    /************************
+     ***** Decode Stage *****
+     ************************/
 
     controller controller_inst (
         .op_i        (opcode_e'(instr[6:0])),
@@ -102,9 +108,13 @@ module rv_single
         .imm_ext_o(imm_ext)
     );
 
+    /*************************
+     ***** Execute Stage *****
+     *************************/
+
     pc_control_unit pc_control_unit_inst (
-        .jump_i(jump), .branch_i   (branch),
-        .zero_i(zero), .branch_op_i(branch_op),
+        .jump_i     (jump), .branch_i   (branch),
+        .zero_i     (zero), .branch_op_i(branch_op),
         .less_than_i(alu_result[0]),
         .pc_src_o   (pc_src)
     );
@@ -112,7 +122,7 @@ module rv_single
     // Branch target address calculation
     assign bta = pc + imm_ext;
 
-    /***** ALU and Source Muxes *****/
+    /***** Source Muxes *****/
 
     // ALU Src A Mux
     mux4 mux4_alu_a_src (
@@ -138,7 +148,9 @@ module rv_single
         .zero_o    (zero),  .alu_result_o(alu_result)
     );
 
-    /***** Data Memory *****/
+    /************************
+     ***** Memory Stage *****
+     ************************/
 
     store_unit store_unit_inst (
         .write_data_i(rs2_d),
@@ -157,14 +169,16 @@ module rv_single
         .rd_o(read_data)
     );
 
+    /***************************
+     ***** Writeback Stage *****
+     ***************************/
+
     load_unit load_unit_inst (
         .read_data_i      (read_data),
         .data_ctrl_i      (data_ctrl),
         .byte_offset_i    (alu_result[CFG_BYTE_OFFSET-1:0]),
         .read_data_sized_o(read_data_sized)
     );
-
-    /***** Writeback/ResultSrc Mux *****/
 
     mux4 mux4_result (
         .sel(result_src),
