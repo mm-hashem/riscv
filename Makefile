@@ -144,7 +144,7 @@ $(ELF): $(LINKER) $(OBJECTS) | $(BUILD_SW_DIR)
 
 # Copy instructions to text.mem
 $(MEMORY_DIR)/text_$(TEST_SLUG).mem: $(ELF) | $(MEMORY_DIR)
-	$(OBJCOPY) $(OBJCOPYFLAGS) --verilog-data-width=4 --only-section=.text $< $@
+	$(OBJCOPY) $(OBJCOPYFLAGS) --verilog-data-width=4 --only-section=.text --gap-fill 0x00 --pad-to $(TEXT_MEM_LEN) $< $@
 
 $(MEMORY_DIR)/data_$(TEST_SLUG).mem: $(ELF) | $(MEMORY_DIR)
 	$(OBJCOPY) $(OBJCOPYFLAGS) --verilog-data-width=$(DATA_BYTES) --only-section=.rodata --only-section=.data \

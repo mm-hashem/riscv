@@ -4,7 +4,6 @@ package pipeline_pkg;
     // Fetch -> Decode -> Execute -> Memory -> Writeback
 
     typedef struct packed {
-        word_ut instr;
         word_st pc,
                 pc_plus_4;
     } ft_dc_t;
@@ -86,7 +85,7 @@ package pipeline_pkg;
         } ctrl;
 
         struct packed {
-            xlen_st alu_result, src_b_fwd_ex_data;
+            xlen_st alu_result;
             word_st pc_plus_4;
         } data;
 

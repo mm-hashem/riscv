@@ -3,9 +3,9 @@ OUTPUT_ARCH(riscv)
 ENTRY(_start)
 
 /*  Note:
-    The design is pure Harvard Architecture.
+    The design is modified Harvard architecture.
     Data, including read-only data, and instructions
-    are in different memories.
+    are in different memories, but with unified, linear flat address space.
 */
 
 MEMORY

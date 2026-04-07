@@ -2,9 +2,14 @@ module rv_stage5
     import config_pkg::*;
     import types_pkg::*;
     import pipeline_pkg::*;
+`ifndef SYNTH
     import dbg_pkg::*;
+`endif
 (
     input logic clk_i, rst_i
+`ifdef SYNTH
+    ,output xlen_st result_wb_o
+`endif
 );
 
     // Hazard Signals
@@ -19,6 +24,7 @@ module rv_stage5
     imm_src_e imm_src_dc;
 
     // Data Signals    
+    word_ut instr_dc;
     xlen_st src_a_fwd_ex_data,
             src_a_ex,          src_b_ex,
             read_data_wb,      write_data_sized_me,
@@ -36,11 +42,15 @@ module rv_stage5
      ***** Debug Signals *****
      *************************/
 
+`ifdef SYNTH
+    assign result_wb_o = result_wb;
+`endif
+
 `ifndef SYNTH
     core_dbg_t dbg;
 
     assign dbg.pc         = ft_dc_d.pc;
-    assign dbg.instr      = ft_dc_d.instr;
+    assign dbg.instr      = instr_dc;
     assign dbg.a          = ex_me_q.data.alu_result; // todo rename
     assign dbg.result     = result_wb;
     assign dbg.wd         = write_data_sized_me;
@@ -95,7 +105,9 @@ module rv_stage5
     assign ft_dc_d.pc_plus_4 = ft_dc_d.pc + CFG_XLEN'(4);
 
     instruction_rom instruction_rom_inst (
-        .instr_a_i(ft_dc_d.pc), .instr_o(ft_dc_d.instr)
+        .clk_i, .rst_i(rst_i | flush_dc),
+        .en_i(~stall_dc),
+        .instr_a_i(ft_dc_d.pc), .instr_o(instr_dc)
     );
 
     always_ff @(posedge clk_i) begin : FetchDecodeReg
@@ -109,13 +121,13 @@ module rv_stage5
 
      assign dc_ex_d.data.pc        = ft_dc_q.pc;
      assign dc_ex_d.data.pc_plus_4 = ft_dc_q.pc_plus_4;
-     assign dc_ex_d.ctrl.rd_a      = reg_e'(ft_dc_q.instr[11:7]);
-     assign dc_ex_d.ctrl.rs1_a     = reg_e'(ft_dc_q.instr[19:15]);
-     assign dc_ex_d.ctrl.rs2_a     = reg_e'(ft_dc_q.instr[24:20]);
+     assign dc_ex_d.ctrl.rd_a      = reg_e'(instr_dc[11:7]);
+     assign dc_ex_d.ctrl.rs1_a     = reg_e'(instr_dc[19:15]);
+     assign dc_ex_d.ctrl.rs2_a     = reg_e'(instr_dc[24:20]);
 
     controller controller_inst (
-        .op_i        (opcode_e'(opcode_e'(ft_dc_q.instr[6:0]))),
-        .funct3_i    (ft_dc_q.instr[14:12]),    .funct7_i   (ft_dc_q.instr[31:25]),
+        .op_i        (opcode_e'(opcode_e'(instr_dc[6:0]))),
+        .funct3_i    (instr_dc[14:12]),         .funct7_i   (instr_dc[31:25]),
         .alu_a_src_o (dc_ex_d.ctrl.alu_a_src),  .alu_b_src_o(dc_ex_d.ctrl.alu_b_src),
         .result_src_o(dc_ex_d.ctrl.result_src), .reg_write_o(dc_ex_d.ctrl.reg_write),
         .imm_src_o   (imm_src_dc),              .alu_ctrl_o (dc_ex_d.ctrl.alu_ctrl),
@@ -135,7 +147,7 @@ module rv_stage5
 
     extend_imm extend_imm_inst (
         .imm_src_i(imm_src_dc),
-        .instr_i  (ft_dc_q.instr),
+        .instr_i  (instr_dc),
         .imm_ext_o(dc_ex_d.data.imm_ext)
     );
 

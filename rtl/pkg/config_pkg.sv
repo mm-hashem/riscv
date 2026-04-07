@@ -49,10 +49,11 @@ package config_pkg;
     localparam CFG_BYTE_OFFSET = CFG_XLEN == 64 ? 3 : 2; // Number of bits for byte offset within a word
 
     // Memory indexing
-    localparam CFG_TEXT_ORG_ARR = CFG_TEXT_ORG / 4, // Word addressing for text memory
-               CFG_TEXT_END_ARR = CFG_TEXT_END / 4,
-               CFG_DATA_ORG_ARR = CFG_DATA_ORG / CFG_DATA_BYTES,
-               CFG_DATA_END_ARR = CFG_DATA_END / CFG_DATA_BYTES;
+    localparam CFG_TEXT_ORG_ARR    = CFG_TEXT_ORG / 4, // Word addressing for text memory
+               CFG_TEXT_END_ARR    = CFG_TEXT_END / 4,
+               CFG_DATA_ORG_ARR    = CFG_DATA_ORG / CFG_DATA_BYTES,
+               CFG_DATA_END_ARR    = CFG_DATA_END / CFG_DATA_BYTES,
+               CFG_DATA_LENGTH_ARR = CFG_DATA_LENGTH / CFG_DATA_BYTES;
 
     logic [CFG_XLEN-1:0] CFG_TOHOST_ADDR = (CFG_TEXT_LENGTH + CFG_DATA_LENGTH - 8) / CFG_DATA_BYTES; // Address of TOHOST in the data memory
 

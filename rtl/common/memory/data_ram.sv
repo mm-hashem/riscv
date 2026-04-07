@@ -9,32 +9,37 @@ module data_ram
     output xlen_st                    rd_o
 );
 
-    localparam SHAMT = CFG_XLEN == 64 ? 3 : 2; // Normalize address for double/word indexing
-
-    logic [CFG_XLEN-1:0] ram [CFG_DATA_ORG_ARR:CFG_DATA_END_ARR-1];
+    xlen_ut addr;
 
 `ifdef SYNTH
-    initial $readmemh("./build/memory/data.mem", ram); // todo path and name
+    assign addr = a_i[CFG_XLEN-1:CFG_BYTE_OFFSET] - CFG_DATA_ORG_ARR;
+    xlen_ut ram [0:CFG_DATA_LENGTH_ARR-1];
+    initial $readmemh("../memory_fpga/data.mem", ram);
+`else
+    assign addr = a_i[CFG_XLEN-1:CFG_BYTE_OFFSET];
+    xlen_ut ram[CFG_DATA_ORG_ARR:CFG_DATA_END_ARR-1];
 `endif
 
     generate
         if (CFG_CORE == STAGE5) begin
             always_ff @(posedge clk_i) begin
                 if (we_i) begin
-                    for (int i; i < CFG_DATA_BYTES; i++)
+                    for (int i = 0; i < CFG_DATA_BYTES; i++)
                         if (byte_enable_i[i])
-                            ram[a_i[CFG_XLEN-1:SHAMT]][i*8+:8] <= wd_i[i*8+:8];
+                            ram[addr][i*8+:8] <= wd_i[i*8+:8];
                 end else
-                    rd_o <= ram[a_i[CFG_XLEN-1:SHAMT]];
+                    rd_o <= ram[addr];
             end
         end else if (CFG_CORE == SINGLE) begin
-            always_ff @(posedge clk_i)
-                if (we_i)
-                    for (int i; i < CFG_DATA_BYTES; i++)
+            always_ff @(posedge clk_i) begin
+                if (we_i) begin
+                    for (int i = 0; i < CFG_DATA_BYTES; i++)
                         if (byte_enable_i[i])
-                            ram[a_i[CFG_XLEN-1:SHAMT]][i*8+:8] <= wd_i[i*8+:8];
-            assign rd_o = ram[a_i[CFG_XLEN-1:SHAMT]];
+                            ram[addr][i*8+:8] <= wd_i[i*8+:8];
+                end
+            end
+            assign rd_o = ram[addr];
         end
     endgenerate
 
-endmodule: data_ram
+endmodule : data_ram
