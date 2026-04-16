@@ -67,7 +67,7 @@ riscv/
 
 <div style="text-align: center;">
     <figure>
-        <img src="docs/diagrams/riscv-riscv_full.png" alt="Full Datapath and Control-path digram">
+        <img src="docs/diagrams/riscv_diag-riscv_full.png" alt="Full Datapath and Control-path digram">
         <figcaption>Full Datapath and Control-path digram. Built using draw.io.</figcaption>
     </figure>
 </div>
