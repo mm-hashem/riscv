@@ -12,15 +12,15 @@ module store_unit
     always_comb begin
         unique case (data_size_i)
             BYTE: begin
-                write_data_sized_o = write_data_i[7:0] << (byte_offset_i * 8);
+                write_data_sized_o = write_data_i[7:0] << 6'(byte_offset_i << 3);
                 byte_enable_o      = 1'b1 << byte_offset_i;
             end
             HALF: begin
-                write_data_sized_o = write_data_i[15:0] << (byte_offset_i * 8);
+                write_data_sized_o = write_data_i[15:0] << 6'(byte_offset_i << 3);
                 byte_enable_o      = 2'b11 << byte_offset_i;
             end
             WORD: begin
-                write_data_sized_o = write_data_i[31:0] << (byte_offset_i * 8);
+                write_data_sized_o = write_data_i[31:0] << 6'(byte_offset_i << 3);
                 byte_enable_o      = 4'b1111 << byte_offset_i;
             end
             DWORD: begin

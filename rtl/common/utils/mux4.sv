@@ -10,7 +10,7 @@ module mux4
 );
 
     always_comb begin
-        case (sel)
+        unique case (sel)
             2'b00   : y = i0;
             2'b01   : y = i1;
             2'b10   : y = i2;

@@ -8,9 +8,10 @@
 ./rtl/common/data_path/extend_imm.sv
 ./rtl/common/data_path/load_unit.sv
 ./rtl/common/data_path/store_unit.sv
-./rtl/common/data_path/program_counter.sv
 ./rtl/common/data_path/register_file.sv
 ./rtl/common/memory/data_ram.sv
 ./rtl/common/memory/instruction_rom.sv
+./rtl/common/utils/dff.sv
 ./rtl/common/utils/mux2.sv
 ./rtl/common/utils/mux4.sv
+./rtl/pipelined/forwarding_control_unit.sv

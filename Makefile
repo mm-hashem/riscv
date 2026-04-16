@@ -180,16 +180,16 @@ COMMON_FILES := -f $(SIM_DIR)/filelist_common.f
 ifeq ($(CORE),SINGLE)
     CORE_FILES += $(RTL_DIR)/cores/rv_single.sv
 else ifeq ($(CORE),STAGE3)
-    CORE_FILES += $(RTL_DIR)/pipelined/stage3/hazard_unit.sv $(RTL_DIR)/cores/rv_stage3.sv
+    CORE_FILES += $(RTL_DIR)/pipeline/stall_control_unit.sv $(RTL_DIR)/cores/rv_stage3.sv
 else ifeq ($(CORE),STAGE5)
-	CORE_FILES += $(RTL_DIR)/pipelined/stage3/hazard_unit.sv $(RTL_DIR)/cores/rv_stage5.sv
+	CORE_FILES += $(RTL_DIR)/pipeline/stall_control_unit.sv $(RTL_DIR)/cores/rv_stage5.sv
 endif
 
 RTL_FILES := $(PKG_FILES) $(COMMON_FILES) $(CORE_FILES)
 VRF_FILES := -f $(SIM_DIR)/filelist_vrf.f
 SV_FILES  := $(RTL_FILES) $(VRF_FILES) $(TOP_FILE)
-DOFILE    := $(SIM_DIR)/sim.do
 
+DOFILE    := $(SIM_DIR)/sim.do
 DOCMD := $(if $(filter $(SIMGUI),1),do $(DOFILE);,$(if $(filter $(RGRS),1),quietly vsim;,)) run -all; $(if $(filter $(SIMGUI),1),,quit -f;)
 
 $(WORK_DIR) $(LOGS_DIR):

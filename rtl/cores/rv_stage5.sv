@@ -2,13 +2,13 @@ module rv_stage5
     import config_pkg::*;
     import types_pkg::*;
     import pipeline_pkg::*;
-`ifndef SYNTH
+/* synthesis translate_off */
     import dbg_pkg::*;
-`endif
+/* synthesis translate_on */
 (
     input logic clk_i, rst_i
 `ifdef SYNTH
-    ,output xlen_st result_wb_o
+    ,output logic [7:0] result_wb_sy;
 `endif
 );
 
@@ -43,10 +43,10 @@ module rv_stage5
      *************************/
 
 `ifdef SYNTH
-    assign result_wb_o = result_wb;
+    assign result_wb_sy = result_wb[7:0];
 `endif
 
-`ifndef SYNTH
+/* synthesis translate_off */
     core_dbg_t dbg;
 
     assign dbg.pc         = ft_dc_d.pc;
@@ -64,66 +64,68 @@ module rv_stage5
     assign dbg.data_size  = ex_me_q.ctrl.data_ctrl.size;
     assign dbg.result_src = me_wb_d.ctrl.result_src;
     assign dbg.rd_a       = me_wb_q.ctrl.rd_a;
-`endif
+/* synthesis translate_on */
 
     /***********************
      ***** Hazard Unit *****
      ***********************/
 
-    hazard_unit hazard_unit_inst (
+    stall_control_unit stall_control_unit_inst (
         .pc_src_i(pc_src_ex),
-        .rs1_a_dc_i (dc_ex_d.ctrl.rs1_a),             .rs2_a_dc_i(dc_ex_d.ctrl.rs2_a),
-        .rs1_a_ex_i (dc_ex_q.ctrl.rs1_a),             .rs2_a_ex_i(dc_ex_q.ctrl.rs2_a),
-        .rd_a_ex_i  (dc_ex_q.ctrl.rd_a),              .rd_a_me_i (ex_me_q.ctrl.rd_a),
-        .rd_a_wb_i  (me_wb_q.ctrl.rd_a),              .result_src_ex_i(dc_ex_q.ctrl.result_src),
-        .reg_write_me_i     (ex_me_q.ctrl.reg_write), .reg_write_wb_i (me_wb_q.ctrl.reg_write),
-        .src_a_fwd_ex_ctrl_o(src_a_fwd_ex_ctrl),      .src_b_fwd_ex_ctrl_o(src_b_fwd_ex_ctrl),
-        .stall_ft_o         (stall_ft),               .stall_dc_o         (stall_dc),
-        .flush_dc_o         (flush_dc),               .flush_ex_o         (flush_ex)
+        .rs1_a_dc_i(dc_ex_d.ctrl.rs1_a), .rs2_a_dc_i(dc_ex_d.ctrl.rs2_a),
+        .rd_a_ex_i (dc_ex_q.ctrl.rd_a),
+        .result_src_ex_i(dc_ex_q.ctrl.result_src),
+        .stall_ft_o(stall_ft), .stall_dc_o(stall_dc),
+        .flush_dc_o(flush_dc), .flush_ex_o(flush_ex)
     );
 
     /***********************
      ***** Fetch Stage *****
      ***********************/
 
-    mux4 #(.type_t(word_st)) mux4_pc_next (
+    assign ft_dc_d.pc_plus_4 = ft_dc_d.pc + CFG_XLEN'(4);
+
+    mux4 #(.type_t(word_st)) mux4_pc_next ( // todo: uppercase
         .sel(pc_src_ex),
         .i0 (ft_dc_d.pc_plus_4),
-        .i1 ({ex_me_d.data.alu_result[31:2], 2'b00}), // J, I: jalr: JTA = rs1 + imm
-        .i2 (bta_ex),                                 // B,          BTA = pc  + imm
+        .i1 (unsigned'({ex_me_d.data.alu_result[31:2], 2'b00})), // J, I: jalr: JTA = rs1 + imm, todo move to instr rom address
+        .i2 (bta_ex),                                 // B:          BTA = pc  + imm
         .i3 ('x),                                     // Unreachable
         .y  (pc_next_ft)
     );
 
-    program_counter program_counter_inst (
-        .clk_i,   .rst_i,
-        .en_i     (~stall_ft),
-        .pc_next_i(pc_next_ft),
-        .pc_o     (ft_dc_d.pc)
+    dff #(.WIDTH(32)) dff_program_counter (
+        .clk_i, .rst_i,
+        .en_i(~stall_ft),
+        .d_i (pc_next_ft),
+        .q_o (ft_dc_d.pc)
     );
-
-    assign ft_dc_d.pc_plus_4 = ft_dc_d.pc + CFG_XLEN'(4);
 
     instruction_rom instruction_rom_inst (
         .clk_i, .rst_i(rst_i | flush_dc),
         .en_i(~stall_dc),
         .instr_a_i(ft_dc_d.pc), .instr_o(instr_dc)
     );
+    
+    /***** Fetch-Decode Stage Register *****/
 
-    always_ff @(posedge clk_i) begin : FetchDecodeReg
-        if      (rst_i || flush_dc) ft_dc_q <= '0;
-        else if (!stall_dc)         ft_dc_q <= ft_dc_d;
-    end : FetchDecodeReg
+    dff #(.WIDTH($bits(ft_dc_t))) dff_ft_dc (
+        .clk_i, .rst_i(rst_i | flush_dc),
+        .en_i(~stall_dc),
+        .d_i (ft_dc_d),
+        .q_o (ft_dc_q)
+    );
 
     /************************
      ***** Decode Stage *****
      ************************/
 
-     assign dc_ex_d.data.pc        = ft_dc_q.pc;
-     assign dc_ex_d.data.pc_plus_4 = ft_dc_q.pc_plus_4;
-     assign dc_ex_d.ctrl.rd_a      = reg_e'(instr_dc[11:7]);
-     assign dc_ex_d.ctrl.rs1_a     = reg_e'(instr_dc[19:15]);
-     assign dc_ex_d.ctrl.rs2_a     = reg_e'(instr_dc[24:20]);
+    // Pass data and control signals to next stage
+    assign dc_ex_d.data.pc        = ft_dc_q.pc;
+    assign dc_ex_d.data.pc_plus_4 = ft_dc_q.pc_plus_4;
+    assign dc_ex_d.ctrl.rd_a      = reg_e'(instr_dc[11:7]);
+    assign dc_ex_d.ctrl.rs1_a     = reg_e'(instr_dc[19:15]);
+    assign dc_ex_d.ctrl.rs2_a     = reg_e'(instr_dc[24:20]);
 
     controller controller_inst (
         .op_i        (opcode_e'(opcode_e'(instr_dc[6:0]))),
@@ -153,13 +155,12 @@ module rv_stage5
 
     /***** Decode-Execute Stage Register *****/
 
-    always_ff @(posedge clk_i) begin : DecodeExecuteReg
-        if (rst_i || flush_ex) begin
-            dc_ex_q.ctrl <= '0;
-            dc_ex_q.data <= '0;
-        end else
-            dc_ex_q <= dc_ex_d;
-    end : DecodeExecuteReg
+    dff #(.WIDTH($bits(dc_ex_t))) dff_dc_ex (
+        .clk_i, .rst_i(rst_i | flush_ex),
+        .en_i(1'b1),
+        .d_i (dc_ex_d),
+        .q_o (dc_ex_q)
+    );
 
     /*************************
      ***** Execute Stage *****
@@ -183,8 +184,14 @@ module rv_stage5
     // Branch target address calculation
     assign bta_ex = dc_ex_q.data.pc + dc_ex_q.data.imm_ext;
 
+    /***** Forwarding Logic *****/
 
-    /***** Forwarding Muxes *****/
+    forwarding_control_unit forwarding_control_unit_inst (
+        .rs1_a_ex_i(dc_ex_q.ctrl.rs1_a),              .rs2_a_ex_i(dc_ex_q.ctrl.rs2_a),
+        .rd_a_me_i (ex_me_q.ctrl.rd_a),               .rd_a_wb_i (me_wb_q.ctrl.rd_a),
+        .reg_write_me_i     (ex_me_q.ctrl.reg_write), .reg_write_wb_i     (me_wb_q.ctrl.reg_write),
+        .src_a_fwd_ex_ctrl_o(src_a_fwd_ex_ctrl),      .src_b_fwd_ex_ctrl_o(src_b_fwd_ex_ctrl)
+    );
 
     // Src A Forwarding Mux
     mux4 mux4_src_a_fwd (
@@ -226,6 +233,13 @@ module rv_stage5
         .y  (src_b_ex)
     );
 
+/*     xlen_st src_a_ex_q, src_b_ex_q;
+
+    always_ff @(posedge clk_i) begin
+        src_a_ex_q <= src_a_ex;
+        src_b_ex_q <= src_b_ex;
+    end
+ */
     alu alu_inst (
         .alu_ctrl_i(dc_ex_q.ctrl.alu_ctrl),
         .src_a_i   (src_a_ex), .src_b_i     (src_b_ex),
@@ -234,18 +248,18 @@ module rv_stage5
 
     /***** Execute-Memory Stage Register *****/
 
-    always_ff @(posedge clk_i) begin : ExecuteMemoryReg
-        if (rst_i) begin
-            ex_me_q.ctrl <= '0;
-            ex_me_q.data <= 'x;
-        end else
-            ex_me_q <= ex_me_d;
-    end : ExecuteMemoryReg
+    dff #(.WIDTH($bits(ex_me_t))) dff_ex_me (
+        .clk_i, .rst_i,
+        .en_i(1'b1),
+        .d_i (ex_me_d),
+        .q_o (ex_me_q)
+    );
 
     /************************
      ***** Memory Stage *****
      ************************/
     
+    // Pass data and control signals to next stage
     assign me_wb_d.ctrl.rd_a       = ex_me_q.ctrl.rd_a;
     assign me_wb_d.ctrl.result_src = ex_me_q.ctrl.result_src;
     assign me_wb_d.ctrl.reg_write  = ex_me_q.ctrl.reg_write;
@@ -270,13 +284,14 @@ module rv_stage5
         .rd_o(read_data_wb)
     );
 
-    always_ff @(posedge clk_i) begin : MemoryWritebackReg
-        if (rst_i) begin
-            me_wb_q.ctrl <= '0;
-            me_wb_q.data <= 'x;
-        end else
-            me_wb_q <= me_wb_d;
-    end : MemoryWritebackReg
+    /***** Memory-Writeback Stage Register *****/
+
+    dff #(.WIDTH($bits(me_wb_t))) dff_me_wb (
+        .clk_i, .rst_i,
+        .en_i(1'b1),
+        .d_i (me_wb_d),
+        .q_o (me_wb_q)
+    );
 
     /***************************
      ***** Writeback Stage *****

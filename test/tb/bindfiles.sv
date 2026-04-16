@@ -39,9 +39,9 @@ module binds
         .rs1_d_o, .rs2_d_o
     );
 
-    bind program_counter program_counter_assert program_counter_assert_inst (
-        .clk_i,     .rst_i,
-        .pc_next_i, .pc_o
+    bind rv_top.RV_CORE.rv_core_inst.dff_program_counter program_counter_assert program_counter_assert_inst ( // todo
+        .clk_i, .rst_i,
+        .d_i,   .q_o
     );
 
     bind RV_CORE.rv_core_inst rv_core_assert rv_core_assert_inst (

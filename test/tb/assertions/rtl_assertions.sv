@@ -91,14 +91,14 @@ endmodule
 module program_counter_assert
 (
     input logic              clk_i, rst_i,
-    input types_pkg::word_st pc_next_i, pc_o
+    input types_pkg::word_st d_i, q_o
 );
 
     property pc_alignment;
         @(posedge clk_i)
         disable iff (rst_i)
-        ((pc_next_i[1:0] == 2'b00) &&
-         (pc_o     [1:0] == 2'b00))
+        ((d_i[1:0] == 2'b00) &&
+         (q_o[1:0] == 2'b00))
     endproperty : pc_alignment
 
     PC_ALIGNMENT_CHK: assert property (pc_alignment);

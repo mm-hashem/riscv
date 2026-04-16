@@ -8,7 +8,7 @@ A synthesizable RISC-V processor implementation in SystemVerilog supporting both
 - Zba extension support
 - SystemVerilog formal verification with assertions
 - Automated build and regression testing
-- Harvard architecture with separate instruction and data memories
+- Modified Harvard architecture with separate instruction and data memories
 
 ## Table of Contents
 
@@ -38,8 +38,7 @@ riscv/
 │   │   ├── memory/                    # Data and instruction memories
 │   │   └── utils/                     # Generic primitives
 │   ├── cores/                         # Core top-level modules
-│   ├── pipelined/                     # Pipeline-specific components
-│   │   └── stage3/                    # 3-stage pipeline-specific components
+│   ├── pipeline/                      # Pipeline-specific components
 │   └── pkg                            # SystemVerilog packages
 └── test/                              # Test infrastructure
     ├── sim/                           # Simulation-specific files
@@ -125,7 +124,7 @@ Refer to [docs/tables.md](docs/tables.md) for detailed instruction and control s
 
 ### Design Principles
 
-- **Harvard Architecture:** Separate instruction and data memory spaces
+- **Modified Harvard Architecture:** Physically separate instruction and data memory spaces, 
 - **Clean SystemVerilog:** Modern constructs including enums, packed structs, packages, `bind`, `case inside`, and assignment patterns
 - **Synthesizable:** Ready for FPGA implementation, though minor adjustments may be required depending synthesis program support for certain SystemVerilog constructs.
 - Design rationale based on *Digital Design and Computer Architecture: RISC-V Edition*
@@ -301,6 +300,8 @@ Assertion modules cleanly bind to RTL using SystemVerilog `bind` statements.
 
 The `main` function and the `.text.main` memory segment serve as the primary entry points for any program executed on this processor. These can be defined using either a section directive or GCC attributes.
 
+The custom naming of hex memory files enables parallel simulation, accelerating the regression testing process.
+
 #### **riscv-tests**
 
 I adapted RISC-V International's `riscv-tests`, making minor modifications to integrate it into my automated workflow:
@@ -322,11 +323,9 @@ Additionally, I tested the processor using a custom C and assembly-based CORDIC 
 
 - [cordic](https://github.com/mm-hashem/cordic)
 
-- The custom naming of hex memory files enables parallel simulation, accelerating the regression testing process.
-
 ## Memory Layout
 
-The processor uses Harvard architecture with separately addressable instruction and data memory spaces.
+The processor uses modified Harvard architecture with physically separate instruction and data memories, but unified address space..
 
 **Key Addresses:**
 - Configurable through Makefile
