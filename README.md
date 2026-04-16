@@ -1,11 +1,13 @@
 # Configurable Single-Cycle/Pipelined RISC-V Processor
 
-A synthesizable RISC-V processor implementation in SystemVerilog supporting both single-cycle and 3-stage pipelined microarchitectures. This project demonstrates clean SystemVerilog design practices, hybrid verification, and automated build/simulation flows.
+A synthesizable RISC-V processor implementation in SystemVerilog supporting both single-cycle and 5-stage pipelined microarchitectures. This project demonstrates clean SystemVerilog design practices, hybrid verification, and automated build/simulation flows.
 
 **Key Features:**
 - 32-bit and 64-bit base integer ISA
-- Single-cycle and 3-stage pipelined microarchitectures
+- Single-cycle and 5-stage pipelined microarchitectures
 - Zba extension support
+- Fully synthesizable on Artix-7 FPGA with BRAM-based memories
+- RV32I 5-stage pipeline: up to 50 MHz, 3110 LUTs, 5 BRAMs
 - SystemVerilog formal verification with assertions
 - Automated build and regression testing
 - Modified Harvard architecture with separate instruction and data memories
@@ -72,14 +74,16 @@ riscv/
 
 The design is configurable to support two microarchitectures:
 
-- **Single-Cycle:** All instructions execute in one clock cycle
-- **3-Stage Pipeline:** Divided into Fetch, Decode, and Execute/Memory/Writeback stages
+- **Single-Cycle:** All instructions execute in one clock cycle, for fast simulation-based debugging
+- **5-Stage Pipeline:** Divided into Fetch, Decode, Execute, Memory, and Writeback stages
 
 ### Pipeline Stages
 
-- **Fetch:** Program counter and instruction memory management
-- **Decode:** Register file, immediate extender, and control logic housed here with the hazard unit
-- **Execute/Memory/Writeback:** ALU, data memory, and result multiplexing
+- **Fetch:** Program counter management and instruction memory access
+- **Decode:** Instruction decode, register file reads, immediate extender, and control signal generation
+- **Execute:** Forwarding muxes for data hazard resolution, ALU operations, branch/jump target calculation
+- **Memory:** Data memory access with byte-enable support and store alignment handling
+- **Writeback:** Loaded data alignment handling and register writeback
 
 ### Key Components/Signals
 
@@ -116,9 +120,17 @@ The design is configurable to support two microarchitectures:
 - Read/write, initialized at simulation start from `data_<testname>.mem`.
 - Accessed using load/store instructions.
 
-#### Pipeline Control:
+#### Pipeline Hazards:
 
-**Hazard Unit:** Flushes pipeline registers on branch/jump instructions to prevent data hazards.
+**Hazard Mitigation:** Using forwarding and stall control to manage pipeline hazards.
+- **Forwarding Control Unit:** Generates the forwarding control logic that controls the forwarding muxes in the execute stage.
+- **Stall Control Unit:** Generates the stall and flush signals for the program counter and the pipeline registers.
+
+- Forwarding control logic resolves read-after-write data hazards by bypassing results from later stages (memory and writeback) directly into the execute-stage ALU inputs.
+- Forwarding muxes in the execute stage support ALU operand bypassing.
+- Register file bypass logic enables data to be forwarded to dependent instructions without waiting for writeback.
+- Stall control unit inserts pipeline stalls for load-use hazards and for branch/jump instructions when necessary.
+
 
 Refer to [docs/tables.md](docs/tables.md) for detailed instruction and control signal mappings.
 
@@ -129,10 +141,12 @@ Refer to [docs/tables.md](docs/tables.md) for detailed instruction and control s
 - **Synthesizable:** Ready for FPGA implementation, though minor adjustments may be required depending synthesis program support for certain SystemVerilog constructs.
 - Design rationale based on *Digital Design and Computer Architecture: RISC-V Edition*
 
-### Pipeline Hazards
+### Synthesis
 
-In the 3-stage pipeline configuration, hazards primarily arise from data and control signal propagation that occur before a branch or jump decision is made. To mitigate these issues, there are two hazard control signals:
-- **FlushD and FlushS3:** Clears the data currently in the decode and third stage upon detecting a taken jump or branch.
+- **FPGA Synthesis:** Fully synthesizable on Artix-7 devices.
+- **BRAM Memories:** Uses FPGA BRAM for both instruction and data memory.
+- **Timing:** Verified to achieve up to 50 MHz for the RV32I 5-stage pipeline.
+- **Resource Usage:** Approximately 3110 LUTs and 5 BRAMs for the RV32I 5-stage implementation.
 
 ### Software Runtime
 
@@ -142,6 +156,8 @@ In the 3-stage pipeline configuration, hazards primarily arise from data and con
 - `test_header.h`: Test macros for register preservation following RISC-V calling conventions
 
 **Linker Configuration:** `update_offset.py` dynamically configures linker script with program, data, and stack memory sizes
+
+**Template:** `test/sw/custom/` contains C and assembly template files for writing new programs and verification cases.
 
 ## Getting Started
 
@@ -153,7 +169,7 @@ In the 3-stage pipeline configuration, hazards primarily arise from data and con
 
 **Parameters:**
 - `XLEN`: ISA width (32 or 64 bits)
-- `CORE`: Microarchitecture (SINGLE-cycle or STAGE3-pipeline)
+- `CORE`: Microarchitecture (SINGLE-cycle or STAGE5-pipeline)
 - `EXT`: Optional extensions (Zba currently supported)
 - `SIMGUI`: Enable QuestaSim GUI (default: 0 for command-line only)
 - `RGRS`: Enable regression mode (suppresses output, disables signal visibility for speed, default: 0)
@@ -166,13 +182,13 @@ In the 3-stage pipeline configuration, hazards primarily arise from data and con
 2. Compile and link the test program, RTL, and verification files, and generate the hex memory files:
 
 ```bash
-make build TEST=<test_name> XLEN=[32|64] CORE=[SINGLE|STAGE3] [EXT=ZBA] [SIMGUI=1] [RGRS=1]
+make build TEST=<test_name> XLEN=[32|64] CORE=[SINGLE|STAGE5] [EXT=ZBA] [SIMGUI=1] [RGRS=1]
 ```
 
 3. Run the simulation:
 
 ```bash
-make sim TEST=<test_name> XLEN=[32|64] CORE=[SINGLE|STAGE3] [EXT=ZBA] [SIMGUI=1] [RGRS=1]
+make sim TEST=<test_name> XLEN=[32|64] CORE=[SINGLE|STAGE5] [EXT=ZBA] [SIMGUI=1] [RGRS=1]
 ```
 
 4. You can check `build/results.txt` for returned status code.
@@ -188,19 +204,19 @@ make sim TEST=custom/cordic.c XLEN=32 CORE=SINGLE SIMGUI=1
 - You can also build and simulate using `run` target, which combines both steps:
 
 ```bash
-make run TEST=<test_name> XLEN=[32|64] CORE=[SINGLE|STAGE3] [EXT=ZBA] [SIMGUI=1] [RGRS=1]
+make run TEST=<test_name> XLEN=[32|64] CORE=[SINGLE|STAGE5] [EXT=ZBA] [SIMGUI=1] [RGRS=1]
 ```
 
 - You can only build the test program without simulating by using `build_cc` target. RGRS and SIMGU flags are ignored in this case since they only affect the simulation step.
 
 ```bash
-make build_cc TEST=<test_name> XLEN=[32|64] CORE=[SINGLE|STAGE3] [EXT=ZBA]
+make build_cc TEST=<test_name> XLEN=[32|64] CORE=[SINGLE|STAGE5] [EXT=ZBA]
 ```
 
 - You can only compile the RTL and verification files using `build_sv` target. TEST, RGRS, and SIMGUI flags are ignored in this case since they only affect the program compilation and simulation step.
 
 ```bash
-make build_sv XLEN=[32|64] CORE=[SINGLE|STAGE3] [EXT=ZBA]
+make build_sv XLEN=[32|64] CORE=[SINGLE|STAGE5] [EXT=ZBA]
 ```
 
 ### **`riscv-tests`**
@@ -212,21 +228,21 @@ Regression testing for `riscv-tests` is handled via dedicated targets that itera
 1. Compile and link the test program, RTL, and verification files, and generate the hex memory files:
 
 ```bash
-make build_riscv_tests XLEN=[32|64] CORE=[SINGLE|STAGE3] [EXT=ZBA] RGRS=1
+make build_riscv_tests XLEN=[32|64] CORE=[SINGLE|STAGE5] [EXT=ZBA] RGRS=1
 ```
 
 2. Run the regression testing:
 
 ```bash
-make sim_riscv_tests XLEN=[32|64] CORE=[SINGLE|STAGE3] [EXT=ZBA] RGRS=1
+make sim_riscv_tests XLEN=[32|64] CORE=[SINGLE|STAGE5] [EXT=ZBA] RGRS=1
 ```
 
 3. Check `build/results.txt` for the results of each test. If the test didn't pass, the failed test number will be listed.
 
 **Example:**
 ```bash
-make build_riscv_tests XLEN=64 CORE=STAGE3 RGRS=1
-make sim_riscv_tests XLEN=64 CORE=STAGE3 RGRS=1
+make build_riscv_tests XLEN=64 CORE=STAGE5 RGRS=1
+make sim_riscv_tests XLEN=64 CORE=STAGE5 RGRS=1
 ```
 
 #### Other build and simulation steps
@@ -234,13 +250,13 @@ make sim_riscv_tests XLEN=64 CORE=STAGE3 RGRS=1
 - You can also build and simulate using `run_riscv_tests` target, which combines both steps:
 
 ```bash
-make run_riscv_tests XLEN=[32|64] CORE=[SINGLE|STAGE3] [EXT=ZBA] RGRS=1
+make run_riscv_tests XLEN=[32|64] CORE=[SINGLE|STAGE5] [EXT=ZBA] RGRS=1
 ```
 
 - You can only build the test program without simulating by using `build_cc` target. RGRS flag is ignored in this case since it only affect the simulation step.
 
 ```bash
-make build_cc_riscv_tests XLEN=[32|64] CORE=[SINGLE|STAGE3] [EXT=ZBA]
+make build_cc_riscv_tests XLEN=[32|64] CORE=[SINGLE|STAGE5] [EXT=ZBA]
 ```
 
 **Memory Configuration:**
@@ -325,7 +341,7 @@ Additionally, I tested the processor using a custom C and assembly-based CORDIC 
 
 ## Memory Layout
 
-The processor uses modified Harvard architecture with physically separate instruction and data memories, but unified address space..
+The processor uses modified Harvard architecture with physically separate instruction and data memories, but unified address space.
 
 **Key Addresses:**
 - Configurable through Makefile
