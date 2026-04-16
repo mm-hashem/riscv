@@ -14,4 +14,5 @@
 ./rtl/common/utils/dff.sv
 ./rtl/common/utils/mux2.sv
 ./rtl/common/utils/mux4.sv
-./rtl/pipelined/forwarding_control_unit.sv
+./rtl/pipeline/forwarding_control_unit.sv
+./rtl/pipeline/stall_control_unit.sv

@@ -25,8 +25,8 @@ ifeq ($(filter $(XLEN),32 64),)
     $(error XLEN must be 32 or 64)
 endif
 
-ifeq ($(filter $(CORE),SINGLE STAGE3 STAGE5),)
-    $(error Supported microarchitectures: SINGLE, STAGE3, or STAGE5)
+ifeq ($(filter $(CORE),SINGLE STAGE5),)
+    $(error Supported microarchitectures: SINGLE or STAGE5)
 endif
 
 ifdef EXT
@@ -179,10 +179,8 @@ COMMON_FILES := -f $(SIM_DIR)/filelist_common.f
 
 ifeq ($(CORE),SINGLE)
     CORE_FILES += $(RTL_DIR)/cores/rv_single.sv
-else ifeq ($(CORE),STAGE3)
-    CORE_FILES += $(RTL_DIR)/pipeline/stall_control_unit.sv $(RTL_DIR)/cores/rv_stage3.sv
 else ifeq ($(CORE),STAGE5)
-	CORE_FILES += $(RTL_DIR)/pipeline/stall_control_unit.sv $(RTL_DIR)/cores/rv_stage5.sv
+	CORE_FILES += $(RTL_DIR)/cores/rv_stage5.sv
 endif
 
 RTL_FILES := $(PKG_FILES) $(COMMON_FILES) $(CORE_FILES)

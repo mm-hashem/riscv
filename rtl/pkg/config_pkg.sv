@@ -4,9 +4,8 @@ package config_pkg;
 
     typedef enum logic [1:0] {
         SINGLE  = 2'b00,
-        STAGE3  = 2'b01,
-        STAGE5  = 2'b10,
-        UNKNOWN = 2'b11
+        STAGE5  = 2'b01,
+        UNKNOWN = 2'b10
     } core_e;
 
 `ifdef XLEN
@@ -17,8 +16,6 @@ package config_pkg;
 
 `ifdef SINGLE
     localparam core_e CFG_CORE = SINGLE;
-`elsif STAGE3
-    localparam core_e CFG_CORE = STAGE3;
 `elsif STAGE5
     localparam core_e CFG_CORE = STAGE5;
 `else
@@ -70,8 +67,7 @@ package config_pkg;
     function automatic void dispConfig(string testname);
         string core_str, zba_str;
 
-        if      (CFG_CORE == STAGE3) core_str = "3-stage pipeline";
-        else if (CFG_CORE == STAGE5) core_str = "5-stage pipeline";
+        if      (CFG_CORE == STAGE5) core_str = "5-stage pipeline";
         else if (CFG_CORE == SINGLE) core_str = "Single-cycle";
         if      (CFG_ZBA)            zba_str  = "ZBA";
 
