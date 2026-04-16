@@ -19,12 +19,6 @@ module rv_top
                 .rst_i(rst)
             );
         end : RV_CORE
-        else if (CFG_CORE == STAGE3) begin : RV_CORE
-            rv_stage3 rv_core_inst (
-                .clk_i(clk),
-                .rst_i(rst)
-            );
-        end : RV_CORE
         else if (CFG_CORE == STAGE5) begin : RV_CORE
             rv_stage5 rv_core_inst (
                 .clk_i(clk),
