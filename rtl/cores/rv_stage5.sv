@@ -8,7 +8,7 @@ module rv_stage5
 (
     input logic clk_i, rst_i
 `ifdef SYNTH
-    ,output logic [7:0] result_wb_sy;
+    ,output logic [7:0] result_wb_sy
 `endif
 );
 
