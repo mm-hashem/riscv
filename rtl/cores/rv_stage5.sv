@@ -89,12 +89,12 @@ module rv_stage5
         .sel(pc_src_ex),
         .i0 (ft_dc_d.pc_plus_4),
         .i1 (unsigned'({ex_me_d.data.alu_result[31:2], 2'b00})), // J, I: jalr: JTA = rs1 + imm, todo move to instr rom address
-        .i2 (bta_ex),                                 // B:          BTA = pc  + imm
-        .i3 ('x),                                     // Unreachable
+        .i2 (bta_ex),                                            // B:          BTA = pc  + imm
+        .i3 ('x),                                                // Unreachable
         .y  (pc_next_ft)
     );
 
-    dff #(.WIDTH(32)) dff_program_counter (
+    dff #(.WIDTH(32)) dff_program_counter_inst (
         .clk_i, .rst_i,
         .en_i(~stall_ft),
         .d_i (pc_next_ft),
@@ -216,7 +216,7 @@ module rv_stage5
     /***** Source Muxes *****/
 
     // ALU Src A Mux
-    mux4 mux4_alu_a_src (
+    mux4 mux4_alu_a_src_inst (
         .sel(dc_ex_q.ctrl.alu_a_src),
         .i0 (src_a_fwd_ex_data), // Register/Immediate instructions
         .i1 ('0),                // U: lui
@@ -226,20 +226,13 @@ module rv_stage5
     );
 
     // ALU Src B Mux
-    mux2 mux2_alu_b_src (
+    mux2 mux2_alu_b_src_inst (
         .sel(dc_ex_q.ctrl.alu_b_src),
         .i0 (ex_me_d.data.src_b_fwd_ex_data),
         .i1 (dc_ex_q.data.imm_ext),
         .y  (src_b_ex)
     );
 
-/*     xlen_st src_a_ex_q, src_b_ex_q;
-
-    always_ff @(posedge clk_i) begin
-        src_a_ex_q <= src_a_ex;
-        src_b_ex_q <= src_b_ex;
-    end
- */
     alu alu_inst (
         .alu_ctrl_i(dc_ex_q.ctrl.alu_ctrl),
         .src_a_i   (src_a_ex), .src_b_i     (src_b_ex),
@@ -304,7 +297,7 @@ module rv_stage5
         .read_data_sized_o(read_data_sized_wb)
     );
 
-    mux4 mux4_result (
+    mux4 mux4_result_inst (
         .sel(me_wb_q.ctrl.result_src),
         .i0 (me_wb_q.data.alu_result),
         .i1 (read_data_sized_wb),

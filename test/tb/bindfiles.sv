@@ -39,20 +39,22 @@ module binds
         .rs1_d_o, .rs2_d_o
     );
 
-    bind rv_top.RV_CORE.rv_core_inst.dff_program_counter program_counter_assert program_counter_assert_inst ( // todo
+    bind rv_top.RV_CORE.rv_core_inst.dff_program_counter_inst program_counter_assert program_counter_assert_inst ( // todo
         .clk_i, .rst_i,
         .d_i,   .q_o
     );
+
+    /***** RTL Assertions *****/
 
     bind RV_CORE.rv_core_inst rv_core_assert rv_core_assert_inst (
         .clk_i, .rst_i,
         .branch(dbg.branch), .jump(dbg.jump),
         .we(dbg.mem_write),
         .pc_src(dbg.pc_src),
+        .data_size(dbg.data_size),
+        .result_src(dbg.result_src),
         .pc(dbg.pc), .bta(dbg.bta),
         .alu_result(dbg.alu_result),
-        .result_src(dbg.result_src),
-        .data_size(dbg.data_size),
         .a(dbg.a)
     );
 

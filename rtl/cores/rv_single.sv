@@ -32,8 +32,7 @@ module rv_single
      ***** Debug Signals *****
      *************************/
 
-`ifndef SYNTH
-     core_dbg_t dbg;
+    core_dbg_t dbg;
 
     assign dbg.pc         = pc;
     assign dbg.instr      = instr;
@@ -50,31 +49,32 @@ module rv_single
     assign dbg.data_size  = data_ctrl.size;
     assign dbg.result_src = result_src;
     assign dbg.rd_a       = reg_e'(instr[11:7]);
-`endif
 
     /***********************
      ***** Fetch Stage *****
      ***********************/
 
-    mux4 #(.type_t (word_st)) mux4_pc_next (
+    assign pc_plus_4 = pc + CFG_XLEN'(4);
+
+    mux4 #(.type_t (word_st)) mux4_pc_next ( // todo: uppercase
         .sel(pc_src),
         .i0 (pc_plus_4),
-        .i1 ({alu_result[31:2], 2'b00}), // J, I: jalr: JTA = rs1 + imm
-        .i2 (bta),                       // B,          BTA = pc  + imm
-        .i3 ('x),                        // Unreachable
+        .i1 (unsigned'({alu_result[31:2], 2'b00})), // J, I: jalr: JTA = rs1 + imm
+        .i2 (bta),                                  // B:          BTA = pc  + imm
+        .i3 ('x),                                   // Unreachable
         .y  (pc_next)
     );
 
-    program_counter program_counter_inst (
-        .clk_i,   .rst_i,
-        .en_i     (1'b1),
-        .pc_next_i(pc_next),
-        .pc_o     (pc)
+    dff #(.WIDTH(32)) dff_program_counter_inst (
+        .clk_i, .rst_i,
+        .en_i(1'b1),
+        .d_i (pc_next),
+        .q_o (pc)
     );
 
-    assign pc_plus_4 = pc + CFG_XLEN'(4);
-
     instruction_rom instruction_rom_inst (
+        .clk_i, .rst_i,
+        .en_i(1'b1),
         .instr_a_i(pc), .instr_o(instr)
     );
 
@@ -125,7 +125,7 @@ module rv_single
     /***** Source Muxes *****/
 
     // ALU Src A Mux
-    mux4 mux4_alu_a_src (
+    mux4 mux4_alu_a_src_inst (
         .sel(alu_a_src),
         .i0 (rs1_d), // Register/Immediate instructions
         .i1 ('0),    // U: lui
@@ -135,7 +135,7 @@ module rv_single
     );
 
     // ALU Src B Mux
-    mux2 mux2_alu_b_src (
+    mux2 mux2_alu_b_src_inst (
         .sel(alu_b_src),
         .i0 (rs2_d),
         .i1 (imm_ext),
@@ -180,7 +180,7 @@ module rv_single
         .read_data_sized_o(read_data_sized)
     );
 
-    mux4 mux4_result (
+    mux4 mux4_result_inst (
         .sel(result_src),
         .i0 (alu_result),
         .i1 (read_data_sized),

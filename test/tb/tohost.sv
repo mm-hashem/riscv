@@ -7,7 +7,7 @@ module tohost
     input xlen_st TOHOST
 );
 
-    string  TESTNAME;
+    string TESTNAME;
 
     /***** Initialization of the processor *****/
 

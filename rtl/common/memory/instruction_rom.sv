@@ -16,7 +16,7 @@ module instruction_rom
 
     always_ff @(posedge clk_i) begin
         if (en_i) begin
-            if (rst_i) instr_o <= '0;
+            if (rst_i) instr_o <= 32'h0000_0013;
             else       instr_o <= rom[instr_a_i[31:2]];
         end
     end

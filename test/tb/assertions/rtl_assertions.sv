@@ -108,13 +108,14 @@ endmodule : program_counter_assert
 module rv_core_assert
     import types_pkg::*;
 (
-    input logic        clk_i, rst_i,
+    input logic        clk_i,  rst_i,
                        branch, jump,
                        we,
     input pc_src_e     pc_src,
     input data_size_e  data_size,
     input result_src_e result_src,
-    input word_st      pc, bta, alu_result,
+    input word_st      pc, bta,
+                       alu_result,
     input xlen_ut      a
 );
 
@@ -134,7 +135,7 @@ module rv_core_assert
         @(posedge clk_i)
         disable iff (rst_i)
         (we || result_src == RESULT_MEMORY) |->
-            ( (data_size == BYTE)                        || // Any address
+             ((data_size == BYTE)                        || // Any address
              ((data_size == HALF)  && (a[0]   == 1'b0))  || // Halfword  -aligned
              ((data_size == WORD)  && (a[1:0] == 2'b00)) || // Word      -aligned
              ((data_size == DWORD) && (a[2:0] == 3'b000)))  // Doubleword-aligned;
