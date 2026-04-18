@@ -8,10 +8,10 @@
 #define _PI_4  (_PI >> 2)
 #define _2PI   (_PI << 1)
 #define _3PI_2 (3*_PI_2)
-#define N      16         // Number of itereations and LUT values
-#define K      0x09b74eda // The cosines multiplication constant
+#define N      16                 // Number of itereations and LUT values
+#define K      0x0000000009b74eda // The cosines multiplication constant
 
-void cordic(int angle, int* arr);
-int  main(void) __attribute__((section(".text.main")));
+void cordic(long angle, long* arr);
+long main(void) __attribute__((section(".text.main")));
 
 #endif // CORDIC_H
