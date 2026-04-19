@@ -83,6 +83,10 @@ module binds
 
     /***** TOHOST *****/
 
-    bind data_ram tohost tohost_inst ( .clk_i, .TOHOST(ram[CFG_TOHOST_ADDR]) );
+    bind data_ram tohost tohost_inst (
+        .clk_i,
+        .we_i,
+        .a_i, .wd_i
+    );
 
 endmodule : binds

@@ -52,7 +52,7 @@ package config_pkg;
                CFG_DATA_END_ARR    = CFG_DATA_END / CFG_DATA_BYTES,
                CFG_DATA_LENGTH_ARR = CFG_DATA_LENGTH / CFG_DATA_BYTES;
 
-    logic [CFG_XLEN-1:0] CFG_TOHOST_ADDR = (CFG_TEXT_LENGTH + CFG_DATA_LENGTH - 8) / CFG_DATA_BYTES; // Address of TOHOST in the data memory
+    logic [CFG_XLEN-1:0] CFG_TOHOST_ADDR = CFG_TEXT_LENGTH + CFG_DATA_LENGTH - 8; // Address of TOHOST in the data memory
 
     function automatic void checkConfig;
         if (CFG_XLEN == -1)      $fatal(1, "XLEN is not defined.");

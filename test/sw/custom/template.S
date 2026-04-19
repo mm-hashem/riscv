@@ -4,6 +4,6 @@
 main:
     # Code
 
-    li a0, -1 # Return code
+    li a0, 0 # Return code
     ret
 .end

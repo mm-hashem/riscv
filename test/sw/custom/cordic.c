@@ -60,5 +60,5 @@ long main(void) {
 
     /* This function tests multiple arithmetic, memory, and branching operations. */
     cordic(0x0c90fdaa, arr); // test 45*. result should be approx. 0b505ab6
-    return -1;
+    return 0;
 }

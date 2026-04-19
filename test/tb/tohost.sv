@@ -4,10 +4,22 @@ module tohost
     import tb_utils_pkg::*;
 (
     input logic   clk_i,
-    input xlen_st TOHOST
+                  we_i,
+    input xlen_ut a_i, wd_i
 );
 
     string TESTNAME;
+
+    always_ff @(posedge clk_i) begin
+        if (we_i && a_i == CFG_TOHOST_ADDR) begin
+`ifndef RGRS
+                $display("\n----- TOHOST Status Code 0x%0x @ %0t ns -----\n", wd_i, $time);  
+                dispConfig(TESTNAME); // Displaying the configuration and memory layout
+`endif
+                writeResult(wd_i, TESTNAME); // Write results to result.txt
+                $stop;
+        end
+    end
 
     /***** Initialization of the processor *****/
 
@@ -17,15 +29,6 @@ module tohost
         if (!$value$plusargs("TESTNAME=%s", TESTNAME))
             $fatal(1, "No TESTNAME specified.");
 
-        wait(TOHOST); // Waiting for TOHOST to be non-zero
-
-`ifndef RGRS
-        $display("\n----- TOHOST Status Code 0x%0x @ %0t ns -----\n", TOHOST, $time);  
-        dispConfig(TESTNAME); // Displaying the configuration and memory layout
-`endif
-        
-        writeResult(TOHOST, TESTNAME); // Write results to result.txt
-        $stop;
     end : ToHostInit
 
 endmodule : tohost

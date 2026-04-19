@@ -343,10 +343,9 @@ Additionally, I tested the processor using a custom C and assembly-based CORDIC 
 
 The processor uses modified Harvard architecture with physically separate instruction and data memories, but unified address space.
 
-**Key Addresses:**
+**Details**
 - Configurable through Makefile
 - Linear flat address space
-- Default return status code: -1
 - Global pointer (gp) positioned at mid-point of data/BSS sections
 
 | Address | Section | Pointer | Memory | Read/Write |
