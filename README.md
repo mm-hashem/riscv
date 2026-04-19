@@ -49,12 +49,12 @@ riscv/
     │   ├── custom/                    # Custom test programs
     │   ├── headers/                   # Test macros and utilities
     │   ├── linker/                    # Custom linker script
-    │   ├── riscv_tests/               # Adapted riscv-tests
-    │   │   ├── headers/               # riscv-tests macros and utilities
-    │   │   ├── rv32i/                 # 32-bit base integer tests
-    │   │   ├── rv32zba/               # 32-bit Zba extension tests
-    │   │   ├── rv64i/                 # 64-bit base integer tests
-    │   │   └── rv64zba/               # 64-bit Zba extension tests
+    |   ├── third_party/               # Third-party tests
+    │   │   └── riscv_tests/           # Adapted riscv-tests
+    │   │       ├── headers/           # riscv-tests macros and utilities
+    │   │       ├── rv32zba/           # 32-bit Zba extension tests
+    │   │       ├── rv64i/             # 32-/64-bit base integer tests
+    │   │       └── rv64zba/           # 64-bit Zba extension tests
     │   └── scripts/                   # Build and simulation helper scripts
     └── tb/                            # Verification modules
         ├── assertions/                # Formal assertion modules
@@ -221,7 +221,7 @@ make build_sv XLEN=[32|64] CORE=[SINGLE|STAGE5] [EXT=ZBA]
 
 ### **`riscv-tests`**
 
-**Important:** This project uses a subset of `riscv-tests` adapted for this project. See [Test Programs](#test-programs) and [test/sw/riscv_tests/README.md](test/sw/riscv_tests/README.md) for details on the modifications and license.
+**Important:** This project uses a subset of `riscv-tests` adapted for this project. See [Test Programs](#test-programs) and [test/sw/third_party/riscv_tests/README.md](test/sw/third_party/riscv_tests/README.md) for details on the modifications and license.
 
 Regression testing for `riscv-tests` is handled via dedicated targets that iterate over test files, while standard build/sim targets operate on a single test.
 
@@ -323,7 +323,7 @@ The custom naming of hex memory files enables parallel simulation, accelerating 
 I adapted RISC-V International's `riscv-tests`, making minor modifications to integrate it into my automated workflow:
 
 - **Source:** [riscv-tests repository](https://github.com/riscv-software-src/riscv-tests)
-- **License:** See [test/sw/riscv_tests/LICENSE.txt](test/sw/riscv_tests/LICENSE.txt)
+- **License:** See [test/sw/third_party/riscv_tests/LICENSE.txt](test/sw/third_party/riscv_tests/LICENSE.txt)
 
 Modifications:
 - Added assembly directives and adjusted memory sections to match my custom linker script
@@ -331,7 +331,7 @@ Modifications:
 - Added code for register saving/resting
 - Removed unused macros and code for simplicity
 
-Source files are stored in `test/sw/riscv_tests/`.
+Source files are stored in `test/sw/third_party/riscv_tests/`.
 
 Original license and headers are preserved.
 

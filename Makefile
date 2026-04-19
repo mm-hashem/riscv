@@ -62,7 +62,7 @@ BUILD_DIR    := ./build
 TEST_SW_DIR  := $(TEST_DIR)/sw
 BUILD_SW_DIR := $(BUILD_DIR)/sw
 MEMORY_DIR   := $(BUILD_DIR)/memory
-HEADERS      := -I$(TEST_SW_DIR)/headers -I$(TEST_SW_DIR)/riscv_tests/headers # RISCV TESTS
+HEADERS      := -I$(TEST_SW_DIR)/headers -I$(TEST_SW_DIR)/third_party/riscv_tests/headers # RISCV TESTS
 
 # Definitions
 CCDEFS   := -DXLEN=$(XLEN) -DCORE=$(CORE) $(if $(filter ZBA,$(EXT)),-DZBA=1)
@@ -87,10 +87,10 @@ MEMORIES  := $(MEMORY_DIR)/text_$(TEST_SLUG).mem $(MEMORY_DIR)/data_$(TEST_SLUG)
 CFGSV     := ./rtl/pkg/config_pkg.sv
 UPDLINKER := $(BUILD_DIR)/.update_linker_stamp
 
-RISCV_TESTS_32i   := $(wildcard $(TEST_SW_DIR)/riscv_tests/rv32i/*.S)
-RISCV_TESTS_32ZBA := $(wildcard $(TEST_SW_DIR)/riscv_tests/rv32zba/*.S)
-RISCV_TESTS_64i   := $(wildcard $(TEST_SW_DIR)/riscv_tests/rv64i/*.S)
-RISCV_TESTS_64ZBA := $(wildcard $(TEST_SW_DIR)/riscv_tests/rv64zba/*.S)
+RISCV_TESTS_32i   := $(wildcard $(TEST_SW_DIR)/third_party/riscv_tests/rv64i/*.S)
+RISCV_TESTS_32ZBA := $(wildcard $(TEST_SW_DIR)/third_party/riscv_tests/rv32zba/*.S)
+RISCV_TESTS_64i   := $(wildcard $(TEST_SW_DIR)/third_party/riscv_tests/rv64i/*.S)
+RISCV_TESTS_64ZBA := $(wildcard $(TEST_SW_DIR)/third_party/riscv_tests/rv64zba/*.S)
 
 RISCV_TEST_TARGET := RISCV_TESTS_$(XLEN)$(if $(filter $(EXT),ZBA),ZBA,i)
 RISCV_TESTS = $($(RISCV_TEST_TARGET))
