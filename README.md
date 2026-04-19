@@ -92,10 +92,15 @@ The design is configurable to support two microarchitectures:
 #### Control Path:
 
 **Controller:** Centralized control unit that generates control signals based on the opcode, funct3, and funct7 fields of the instruction.
+
 **Main Decoder:** Generates high-level control signals such as RegWrite, MemRead, MemWrite, ALUSrc, and PCSrc based on the opcode.
+
 **ALU Decoder:** Generates ALU control signals based on opcode, funct3, and funct7 fields.
+
 **Branch Decoder:** Determines branch type and generates BranchOp control signal for PC Control Unit.
+
 **Memory Control Unit:** Generates byte-enable and sign/zero-extension control signals for load/store instructions.
+
 **PC Control Unit:** Generates the PC source signal to multiplex between sequential (PC+4), jump, and branch targets.
 
 **Control Signals:**
