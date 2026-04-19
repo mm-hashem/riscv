@@ -10,12 +10,8 @@ package tb_utils_pkg;
     
     function automatic void writeResult(xlen_st exit_code, string testname);
         int results_f = $fopen("./build/results.txt", "a");
-        if (results_f) begin
-            if (exit_code == '1)
-                $fdisplay(results_f, "TEST %s\tPASSED", testname);
-            else
-                $fdisplay(results_f, "TEST %s\tFAILED @ %0d", testname, exit_code);
-        end else $display("RESULTS WERE NOT LOGGED");
+        if (results_f) $fdisplay(results_f, "Test: %s, Exit code: %0d", testname, exit_code);
+        else           $display("RESULTS WERE NOT LOGGED");
     endfunction
 
     function automatic string getInstrName (word_ut instr);
