@@ -45,7 +45,7 @@ riscv/
 └── test/                              # Test infrastructure
     ├── sim/                           # Simulation-specific files
     ├── sw/                            # Test programs and runtime
-    │   ├── crt/                       # C runtime (startup/exit)
+    │   ├── crt/                       # C runtime
     │   ├── custom/                    # Custom test programs
     │   ├── headers/                   # Test macros and utilities
     │   ├── linker/                    # Custom linker script
@@ -157,7 +157,10 @@ Refer to [docs/tables.md](docs/tables.md) for detailed instruction and control s
 
 **C Runtime Components:**
 - `_start.S`: Initializes global pointer (gp) and stack pointer (sp); handles main function call and exit
-- `_exit.S`: Passes exit status to simulator
+- `_exit.S`: Passes exit status to the simulator
+- `putchar.c`: Passes the print characters to the simulator
+- `puts.c`: Prints a string with newline.
+- `mini_printf.c`: Prints strings and variables. Currently supports a very limited subset of the original printf.
 - `test_header.h`: Test macros for register preservation following RISC-V calling conventions
 
 **Linker Configuration:** `update_offset.py` dynamically configures linker script with program, data, and stack memory sizes
@@ -319,7 +322,7 @@ Assertion modules cleanly bind to RTL using SystemVerilog `bind` statements.
 
 ### Test Programs
 
-The `main` function and the `.text.main` memory segment serve as the primary entry points for any program executed on this processor. These can be defined using either a section directive or GCC attributes.
+The `main` function serve as the primary entry point for any program executed on this processor.
 
 The custom naming of hex memory files enables parallel simulation, accelerating the regression testing process.
 
@@ -348,20 +351,23 @@ Additionally, I tested the processor using a custom C and assembly-based CORDIC 
 
 The processor uses modified Harvard architecture with physically separate instruction and data memories, but unified address space.
 
-**Details**
 - Configurable through Makefile
 - Linear flat address space
 - Global pointer (gp) positioned at mid-point of data/BSS sections
+- MMIO section for communication between the simulator and the program.
+    - TOHOST: for halting the simulation.
+    - Print: for printing to the simulator's console.
 
-| Address | Section | Pointer | Memory | Read/Write |
-|--------:|:-------:|---------|:------:|:----------:|
-| 0x2C00  | TOHOST  | —       | DMEM   | R/W        |
-| 0x2C00  | Stack   | ← sp    | DMEM   | R/W        |
-| 0x2800  | Stack   |         | DMEM   | R/W        |
-| 0x----  | .bss    | ← gp    | DMEM   | R/W        |
-| 0x----  | .data   | ← gp    | DMEM   | R/W        |
-| 0x2400  | .rodata | -       | DMEM   | R          |
-| 0x0000  | .text   | ← PC    | IMEM   | R          |
+| Address | Section | Description      | Pointer | Memory | Read/Write |
+|--------:|:-------:|:----------------:|---------|:------:|:----------:|
+| 0x2C08  | MMIO    | Print            | -       | -      | R/W        |
+| 0x2C00  | MMIO    | TOHOST           | -       | -      | R/W        |
+| 0x2C00  | .stack  | Top of the Stack | ← sp    | DMEM   | R/W        |
+| 0x2800  | .stack  | End of the Stack |         | DMEM   | R/W        |
+| 0x----  | .bss    | BSS              | ← gp    | DMEM   | R/W        |
+| 0x----  | .data   | Data             | ← gp    | DMEM   | R/W        |
+| 0x2400  | .rodata | Read-only data   | ← gp    | DMEM   | R          |
+| 0x0000  | .text   | Program          | ← PC    | IMEM   | R          |
 
 **Notes:**
 - Read-only data (rodata) resides in the data memory
