@@ -59,8 +59,6 @@ cordic:
     mv a1, t5
     ret
     
-.section .text.main
-.align 2
 main:
     li   a0, 0x0c90fdaa
     call cordic

@@ -2,8 +2,8 @@
 
 .section .text._start
 .globl _start
-.globl __global_pointer$
-.globl _stack_top
+.extern __global_pointer$
+.extern _stack_top
 .align 2
 _start:
     .option push

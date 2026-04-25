@@ -1,4 +1,5 @@
 #include "cordic.h"
+#include "crt.h"
 
 // Fixed-point format: Q3.28, 1 sign bit, 3 integer bits, 28 fraction bits
 // Values are generated using MATLAB with Fixed-Point Designer Toolbox
@@ -16,8 +17,7 @@ static const long atan_lut[] = {
            arr[1] = sin(angle) in Q3.28 format
 */
 void cordic(long angle, long* arr) {
-    int i,
-        dir = 1,
+    int dir = 1,
         sign_cos = 1;
         
     long x_cos_old = K,
@@ -35,7 +35,7 @@ void cordic(long angle, long* arr) {
         sign_cos = 0;
     }
     
-    for (i = 0; i < N; i++) {
+    for (int i = 0; i < N; i++) {
         dir = angle < 0 ? -1 : 0;
         
         x_cos -= (((y_sin     >> i) ^ dir) - dir);
@@ -55,10 +55,13 @@ void cordic(long angle, long* arr) {
     arr[1] = y_sin;
 }
 
-long main(void) {
+int main() {
     long arr[2];
 
     /* This function tests multiple arithmetic, memory, and branching operations. */
     cordic(0x0c90fdaa, arr); // test 45*. result should be approx. 0b505ab6
+
+    mini_printf("RESULT:\ncosine: 0x%x\nsine: 0x%x", arr[0], arr[1]);
+
     return 0;
 }

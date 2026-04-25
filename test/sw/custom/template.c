@@ -1,6 +1,7 @@
-int main(void) __attribute__((section(".text.main")));
+// include crt.h to use print functions
+// #include "crt.h"
 
-int main(void) {
+int main() {
     // Code
     
     return 0; // Return code

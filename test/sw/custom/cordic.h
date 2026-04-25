@@ -12,6 +12,5 @@
 #define K      0x0000000009b74eda // The cosines multiplication constant
 
 void cordic(long angle, long* arr);
-long main(void) __attribute__((section(".text.main")));
 
 #endif // CORDIC_H

@@ -1,6 +1,9 @@
-.section .text.main
+// include crt.h to use print functions
+// #include "crt.h"
+
 .globl main
 .align 2
+.text
 main:
     # Code
 
