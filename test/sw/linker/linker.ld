@@ -19,8 +19,6 @@ SECTIONS
     .text : {
         . = ALIGN(4);
         *(.text._start)
-        *(.text._exit)
-        *(.text.main)
         *(.text*)
     } > IMEM
 
@@ -29,28 +27,45 @@ SECTIONS
     .rodata : {
         . = ALIGN(8); /**/
         *(.rodata*)
+        . = ALIGN(8); /**/
     } > DMEM
 
     .data : {
         . = ALIGN(8); /**/
-        _data_start = .;
+        _sdata = .;
         *(.data*)
+        . = ALIGN(8); /**/
     } > DMEM
 
-    __global_pointer$ = ALIGN((_data_start + _data_end) / 2, 16);
+    __global_pointer$ = ALIGN((_sdata + _edata) / 2, 16);
 
     .bss : {
         . = ALIGN(8); /**/
         *(.bss*)
+        . = ALIGN(8); /**/
         *(COMMON)
-        _data_end = .;
+        . = ALIGN(8); /**/
+        _edata = .;
     } > DMEM
 
-    . = ALIGN(16);
-    _stack_top = ORIGIN(DMEM) + LENGTH(DMEM);
+    .stack : {
+        . = ALIGN(16);
+        . += 0x00000400;
+        _stack_top = ALIGN(., 16);
+    } > DMEM
 
-    ASSERT(_data_end < ORIGIN(DMEM) + 0x00000400, "BSS overflow into stack")
+    ASSERT(_edata < ORIGIN(DMEM) + 0x00000400, "BSS overflow into stack")
 
-    _tohost = _stack_top;
-    . = _stack_top + 8;
+    /***** MMIO Section *****/
+
+    . = ORIGIN(DMEM) + LENGTH(DMEM);
+    _smmio = .;
+
+    _mmio_tohost = _smmio;
+    . += 8; /**/
+
+    _mmio_print = .;
+    . += 8; /**/
+
+    _emmio = .;
 }

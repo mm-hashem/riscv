@@ -70,7 +70,7 @@ module binds
     /***** Monitor *****/
 
 `ifndef RGRS
-    bind RV_CORE.rv_core_inst monitor monitor_inst (
+/*     bind RV_CORE.rv_core_inst monitor monitor_inst ( // todo
         .clk_i, .rst_i,
         .reg_write(dbg.reg_write),
         .mem_write(dbg.mem_write),
@@ -78,12 +78,24 @@ module binds
         .rd_d(dbg.result), .a    (dbg.a),
         .wd_i(dbg.wd),
         .rd_a(dbg.rd_a)
-    );
+    ); */
 `endif
+
+    ////////////////
+    ///// MMIO /////
+    ////////////////
 
     /***** TOHOST *****/
 
     bind data_ram tohost tohost_inst (
+        .clk_i,
+        .we_i,
+        .a_i, .wd_i
+    );
+
+    /***** PRINT *****/
+
+    bind data_ram print print_inst (
         .clk_i,
         .we_i,
         .a_i, .wd_i

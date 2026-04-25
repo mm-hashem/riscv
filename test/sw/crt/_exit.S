@@ -1,10 +1,10 @@
 #include "test_headers.h"
 
-.section .text._exit
+.text
 .globl _exit
+.extern _mmio_tohost
 .align 2
 _exit:
-    mv t0, zero
-    la t0, _tohost
+    la t0, _mmio_tohost
     ST_INS a0, 0(t0)
 .end

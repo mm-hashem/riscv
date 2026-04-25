@@ -4,17 +4,18 @@
 update_offsets.py
 
 Usage examples:
-  python update_offsets.py 32 0x1000 0x800 0x400
+  python update_offsets.py 32 0x1000 0x800 0x400 0x10
 """
 
 import sys
 import re
 
 if len(sys.argv) > 1:
-    xlen         = int(sys.argv[1])
+    xlen      = int(sys.argv[1])
     text_len  = int(sys.argv[2], 16)
     data_len  = int(sys.argv[3], 16)
     stack_len = int(sys.argv[4], 16)
+    mmio_len  = int(sys.argv[5], 16)
     #print(f"XLEN: {xlen}\nText Length: {text_len}\nData Length: {data_len}\nStack Length: {stack_len}\n")
 else:
     print("No arguments provided.")
@@ -33,15 +34,15 @@ lnk_regexs = [
     r"(IMEM.*LENGTH\s*=\s*)(\d+)(K)",         
     r"(DMEM.*ORIGIN\s*=\s*)(0x\d+)(,.*)",     
     r"(DMEM.*LENGTH\s*=\s*)(\d+)(K)",
-    r"(ASSERT\(_data_end.*)(0x\d+)(.*)",      
-    r"(\.\s*=\s*ALIGN\()(\d+)(\);\s*\/\*\*\/)"
+    r"(ASSERT\(_edata.*)(0x\d+)(.*)",      
+    r"()(\d+)(\)?;\s*\/\*\*\/)"
 ]
 
 cfgsv_regexs = [
     r"(CFG_TEXT_LENGTH\s*=\s+'h)(\d+)(,)",
     r"(CFG_DATA_ORG\s*=\s+'h)(\d+)(;)",   
     r"(CFG_DATA_LENGTH\s*=\s+'h)(\d+)(,)",
-    r"(CFG_STACK_LENGTH\s*=\s*'h)(\d+)(;)"
+    r"(CFG_MMIO_LENGTH\s*=\s*'h)(\d+)(;)"
 ]
 
 lnk_subs = [
@@ -56,8 +57,8 @@ lnk_subs = [
 cfgsv_subs = [
     f"{text_len:08x}",  
     f"{text_len:08x}",  
-    f"{data_len+8:08x}",
-    f"{stack_len:08x}"
+    f"{data_len:08x}",
+    f"{mmio_len:08x}"
 ]
 
 lnk_writeEn   = False

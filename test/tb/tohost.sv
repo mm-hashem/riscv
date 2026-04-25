@@ -11,10 +11,9 @@ module tohost
     string TESTNAME;
 
     always_ff @(posedge clk_i) begin
-        if (we_i && a_i == CFG_TOHOST_ADDR) begin
+        if (we_i && a_i == CFG_MMIO_ADDR.TOHOST) begin
 `ifndef RGRS
                 $display("\n----- TOHOST Status Code 0x%0x @ %0t ns -----\n", wd_i, $time);  
-                dispConfig(TESTNAME); // Displaying the configuration and memory layout
 `endif
                 writeResult(wd_i, TESTNAME); // Write results to result.txt
                 $stop;
@@ -29,6 +28,8 @@ module tohost
         if (!$value$plusargs("TESTNAME=%s", TESTNAME))
             $fatal(1, "No TESTNAME specified.");
 
+        dispConfig(TESTNAME); // Displaying the configuration and memory layout
+        
     end : ToHostInit
 
 endmodule : tohost

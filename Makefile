@@ -8,12 +8,6 @@ CCDBG  ?=
 SIMGUI ?= 0
 RGRS   ?= 0
 
-# Memory Configurations
-TEXT_MEM_LEN ?= 0x00002400
-DATA_MEM_LEN ?= 0x00000800
-STACK_LEN    ?= 0x00000400
-END_ADDR     := $(shell printf "0x%X" $$(($(TEXT_MEM_LEN) + $(DATA_MEM_LEN) + 8))) # +8 for TOHOST
-
 # Input validation
 ifeq ($(filter $(MAKECMDGOALS),build_riscv_tests sim_riscv_tests run_riscv_tests build_sv),)
     ifeq ($(filter $(suffix $(TEST)),.c .s .S),)
@@ -46,6 +40,16 @@ override TEST := $(patsubst ./test/sw/%,%,$(TEST))
 TEST_SLUG     := $(basename $(notdir $(TEST)))
 DATA_BYTES    := $(if $(filter 64,$(XLEN)),8,4)
 
+##################################
+##### Memory Configurations ######
+##################################
+
+TEXT_MEM_LEN := 0x00002400
+DATA_MEM_LEN := 0x00000800
+STACK_LEN    := 0x00000400
+MMIO_LEN     := $(if $(filter 64,$(XLEN)),0x00000010,0x00000008)
+END_ADDR     := $(shell printf "0x%X" $$(($(TEXT_MEM_LEN) + $(DATA_MEM_LEN) + $(MMIO_LEN))))
+
 ####################
 ##### GCC Flow #####
 ####################
@@ -62,7 +66,7 @@ BUILD_DIR    := ./build
 TEST_SW_DIR  := $(TEST_DIR)/sw
 BUILD_SW_DIR := $(BUILD_DIR)/sw
 MEMORY_DIR   := $(BUILD_DIR)/memory
-HEADERS      := -I$(TEST_SW_DIR)/headers -I$(TEST_SW_DIR)/third_party/riscv_tests/headers # RISCV TESTS
+HEADERS      := -I$(TEST_SW_DIR)/crt -I$(TEST_SW_DIR)/headers -I$(TEST_SW_DIR)/third_party/riscv_tests/headers # RISCV TESTS
 
 # Definitions
 CCDEFS   := -DXLEN=$(XLEN) -DCORE=$(CORE) $(if $(filter ZBA,$(EXT)),-DZBA=1)
@@ -78,9 +82,9 @@ LDFLAGS      := -m elf$(XLEN)lriscv -b elf$(XLEN)-littleriscv -nostdlib
 OBJCOPYFLAGS := -I elf$(XLEN)-littleriscv -O verilog
 
 # Files
-CRT       := _start.S _exit.S
+CRT       := _start.S _exit.S putchar.c puts.c mini_printf.c
 SOURCES   := $(addprefix $(TEST_SW_DIR)/,$(TEST)) $(addprefix $(TEST_SW_DIR)/crt/,$(CRT))
-OBJECTS   := $(addprefix $(BUILD_SW_DIR)/,$(patsubst %.S,%.o,$(patsubst %.c,%.o,$(TEST) $(CRT))))
+OBJECTS   := $(addprefix $(BUILD_SW_DIR)/,$(patsubst %.S,%.o,$(patsubst %.c,%.o,$(CRT) $(TEST))))
 ELF       := $(BUILD_SW_DIR)/$(basename $(firstword $(notdir $(SOURCES)))).elf
 LINKER    := $(TEST_SW_DIR)/linker/linker.ld
 MEMORIES  := $(MEMORY_DIR)/text_$(TEST_SLUG).mem $(MEMORY_DIR)/data_$(TEST_SLUG).mem
@@ -117,11 +121,25 @@ sim_riscv_tests:
 # Update memory sizes and addresses
 $(UPDLINKER): $(CFGSV) $(LINKER)
 	$(PYTHON) $(TEST_SW_DIR)/scripts/update_offsets.py $(XLEN) \
-	$(TEXT_MEM_LEN) $(DATA_MEM_LEN) $(STACK_LEN)
+	$(TEXT_MEM_LEN) $(DATA_MEM_LEN) $(STACK_LEN) $(MMIO_LEN)
 	@touch $@
 
 $(BUILD_SW_DIR) $(MEMORY_DIR):
 	@mkdir -p $@
+
+#######################
+##### Compile CRT #####
+#######################
+
+# Compile: crt/.S -> .o
+$(BUILD_SW_DIR)/%.o: $(TEST_SW_DIR)/crt/%.S $(UPDLINKER) | $(BUILD_SW_DIR)
+	@mkdir -p $(dir $@)
+	$(CC) -c $(CCFLAGS) $< -o $@
+
+# Compile: crt/.c -> .o
+$(BUILD_SW_DIR)/%.o: $(TEST_SW_DIR)/crt/%.c $(UPDLINKER) | $(BUILD_SW_DIR)
+	@mkdir -p $(dir $@)
+	$(CC) -c $(CCFLAGS) $< -o $@
 
 # Compile: .c -> .o
 $(BUILD_SW_DIR)/%.o: $(TEST_SW_DIR)/%.c $(UPDLINKER) | $(BUILD_SW_DIR)
@@ -130,11 +148,6 @@ $(BUILD_SW_DIR)/%.o: $(TEST_SW_DIR)/%.c $(UPDLINKER) | $(BUILD_SW_DIR)
 
 # Compile: .S -> .o
 $(BUILD_SW_DIR)/%.o: $(TEST_SW_DIR)/%.S $(UPDLINKER) | $(BUILD_SW_DIR)
-	@mkdir -p $(dir $@)
-	$(CC) -c $(CCFLAGS) $< -o $@
-
-# Compile: crt/.S -> .o
-$(BUILD_SW_DIR)/%.o: $(TEST_SW_DIR)/crt/%.S $(UPDLINKER) | $(BUILD_SW_DIR)
 	@mkdir -p $(dir $@)
 	$(CC) -c $(CCFLAGS) $< -o $@
 
