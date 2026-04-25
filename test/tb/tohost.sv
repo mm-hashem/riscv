@@ -28,8 +28,10 @@ module tohost
         if (!$value$plusargs("TESTNAME=%s", TESTNAME))
             $fatal(1, "No TESTNAME specified.");
 
+`ifndef RGRS
         dispConfig(TESTNAME); // Displaying the configuration and memory layout
-        
+`endif
+
     end : ToHostInit
 
 endmodule : tohost

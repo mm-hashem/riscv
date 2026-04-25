@@ -1,5 +1,3 @@
-#include "test_headers.h"
-
 .section .text._start
 .globl _start
 .extern __global_pointer$
