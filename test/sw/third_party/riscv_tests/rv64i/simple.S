@@ -13,11 +13,10 @@
 #include "test_headers.h"
 #include "test_macros.h"
 
-.section .text.main
 .align 2
 .globl main
 main:
-  STORE_RA_SP_DATA
+  STORE_RA_DATA
   
   li TESTNUM, 1;
 
