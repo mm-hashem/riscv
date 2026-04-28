@@ -47,7 +47,6 @@ riscv/
     ├── sw/                            # Test programs and runtime
     │   ├── crt/                       # C runtime
     │   ├── custom/                    # Custom test programs
-    │   ├── headers/                   # Test macros and utilities
     │   ├── linker/                    # Custom linker script
     |   ├── third_party/               # Third-party tests
     │   │   └── riscv_tests/           # Adapted riscv-tests
@@ -158,10 +157,9 @@ Refer to [docs/tables.md](docs/tables.md) for detailed instruction and control s
 **C Runtime Components:**
 - `_start.S`: Initializes global pointer (gp) and stack pointer (sp); handles main function call and exit
 - `_exit.S`: Passes exit status to the simulator
-- `putchar.c`: Passes the print characters to the simulator
+- `putchar.S`: Passes the print characters to the simulator
 - `puts.c`: Prints a string with newline.
 - `mini_printf.c`: Prints strings and variables. Currently supports a very limited subset of the original printf.
-- `test_header.h`: Test macros for register preservation following RISC-V calling conventions
 
 **Linker Configuration:** `update_offset.py` dynamically configures linker script with program, data, and stack memory sizes
 
@@ -336,7 +334,7 @@ I adapted RISC-V International's `riscv-tests`, making minor modifications to in
 Modifications:
 - Added assembly directives and adjusted memory sections to match my custom linker script
 - Modified test macros to align with core behavior
-- Added code for register saving/resting
+- Added `test_header.h` that includes test macros for register preservation following RISC-V calling conventions
 - Removed unused macros and code for simplicity
 
 Source files are stored in `test/sw/third_party/riscv_tests/`.

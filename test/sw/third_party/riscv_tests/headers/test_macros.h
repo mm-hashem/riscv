@@ -355,10 +355,10 @@ test_ ## testnum: \
 #define TEST_PASSFAIL          \
         bne x0, TESTNUM, pass; \
 fail:                          \
-        LOAD_RA_SP_DATA        \
+        LOAD_RA_DATA           \
         RVTEST_FAIL;           \
 pass:                          \
-        LOAD_RA_SP_DATA        \
+        LOAD_RA_DATA           \
         RVTEST_PASS            \
         
 #endif

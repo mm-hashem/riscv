@@ -14,21 +14,16 @@
 #endif
 
 // Store ra and sp register in the .data section for riscv-tests
-#define STORE_RA_SP_DATA \
+#define STORE_RA_DATA \
     .data;               \
     .align ALIGNB;       \
-    RSP: .MWORD 0;       \
     RRA: .MWORD 0;       \
     .previous;           \
-    la x31, RSP;         \
-    ST_INS sp, 0(x31);   \
     la x31, RRA;         \
     ST_INS ra, 0(x31);
 
 // Load ra and sp register from the .data section for riscv-tests
-#define LOAD_RA_SP_DATA \
-    la x31, RSP;        \
-    LD_INS sp, 0(x31);  \
+#define LOAD_RA_DATA \
     la x31, RRA;        \
     LD_INS ra, 0(x31);
 

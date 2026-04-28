@@ -66,7 +66,7 @@ BUILD_DIR    := ./build
 TEST_SW_DIR  := $(TEST_DIR)/sw
 BUILD_SW_DIR := $(BUILD_DIR)/sw
 MEMORY_DIR   := $(BUILD_DIR)/memory
-HEADERS      := -I$(TEST_SW_DIR)/crt -I$(TEST_SW_DIR)/headers -I$(TEST_SW_DIR)/third_party/riscv_tests/headers # RISCV TESTS
+HEADERS      := -I$(TEST_SW_DIR)/crt -I$(TEST_SW_DIR)/third_party/riscv_tests/headers # RISCV TESTS
 
 # Definitions
 CCDEFS   := -DXLEN=$(XLEN) -DCORE=$(CORE) $(if $(filter ZBA,$(EXT)),-DZBA=1)
@@ -82,7 +82,7 @@ LDFLAGS      := -m elf$(XLEN)lriscv -b elf$(XLEN)-littleriscv -nostdlib
 OBJCOPYFLAGS := -I elf$(XLEN)-littleriscv -O verilog
 
 # Files
-CRT       := _start.S _exit.S putchar.c puts.c mini_printf.c
+CRT       := _start.S _exit.S putchar.S puts.c mini_printf.c
 SOURCES   := $(addprefix $(TEST_SW_DIR)/,$(TEST)) $(addprefix $(TEST_SW_DIR)/crt/,$(CRT))
 OBJECTS   := $(addprefix $(BUILD_SW_DIR)/,$(patsubst %.S,%.o,$(patsubst %.c,%.o,$(CRT) $(TEST))))
 ELF       := $(BUILD_SW_DIR)/$(basename $(firstword $(notdir $(SOURCES)))).elf
